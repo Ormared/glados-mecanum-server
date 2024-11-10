@@ -1,9 +1,9 @@
 # robo-wheel-server
 
 Stack:
-- Ubuntu 22.04
-- ROS2(humble)
-- Gazebo(Fortress)
+- Ubuntu 24.04
+- ROS2(Jazzy)
+- Gazebo(Harmonica)
 
 ## How to start
 1. Install ROS2 Humble desktop and ros-dev-tools
