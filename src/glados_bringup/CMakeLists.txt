@@ -6,6 +6,9 @@ find_package(ament_cmake REQUIRED)
 find_package(glados_description REQUIRED)
 find_package(glados_gazebo REQUIRED)
 
+find_package(serial_communication REQUIRED)
+find_package(teleop_to_serial REQUIRED)
+
 # Install project launch files
 install(
   DIRECTORY

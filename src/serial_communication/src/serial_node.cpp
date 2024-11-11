@@ -91,7 +91,7 @@ private:
     {
         if (serial_port_ < 0) return;
 
-        char buffer[256];
+        char buffer[34];
         ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
         if (bytes_read > 0) {
             auto message = std_msgs::msg::String();

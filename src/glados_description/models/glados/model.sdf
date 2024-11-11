@@ -1,6 +1,15 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
     <model name='glados' xmlns:gz="http://gazebosim.org/schema">
+      <link name='base_footprint'>
+        <pose>-0.151427 0 0 0 0 0</pose>
+      </link>
+
+      <joint name='base_footprint_to_chassis' type='fixed'>
+        <parent>base_footprint</parent>
+        <child>chassis</child>
+      </joint>
+
       <link name='chassis'>
         <pose>-0.151427 -0 0.175 0 -0 0</pose>
         <inertial>
@@ -53,7 +62,7 @@
           <geometry>
             <!-- scale mesh to radius == 0.3 -->
             <mesh>
-              <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Mecanum lift/tip/files/meshes/mecanum_wheel_left.STL</uri>
+            <uri>package://glados_description/models/glados/meshes/mecanum_wheel_left.STL</uri>
               <scale>0.006 0.006 0.006</scale>
             </mesh>
           </geometry>
@@ -99,7 +108,7 @@
           <geometry>
             <!-- scale mesh to radius == 0.3 -->
             <mesh>
-              <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Mecanum lift/tip/files/meshes/mecanum_wheel_right.STL</uri>
+            <uri>package://glados_description/models/glados/meshes/mecanum_wheel_right.STL</uri>
               <scale>0.006 0.006 0.006</scale>
             </mesh>
           </geometry>
@@ -145,7 +154,7 @@
           <geometry>
             <!-- scale mesh to radius == 0.3 -->
             <mesh>
-              <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Mecanum lift/tip/files/meshes/mecanum_wheel_right.STL</uri>
+            <uri>package://glados_description/models/glados/meshes/mecanum_wheel_right.STL</uri>
               <scale>0.006 0.006 0.006</scale>
             </mesh>
           </geometry>
@@ -191,7 +200,7 @@
           <geometry>
             <!-- scale mesh to radius == 0.3 -->
             <mesh>
-              <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Mecanum lift/tip/files/meshes/mecanum_wheel_left.STL</uri>
+            <uri>package://glados_description/models/glados/meshes/mecanum_wheel_left.STL</uri>
               <scale>0.006 0.006 0.006</scale>
             </mesh>
           </geometry>
