@@ -1,11 +1,25 @@
 # robo-wheel-server
-
 Stack:
 - Ubuntu 24.04
 - ROS2(Jazzy)
 - Gazebo(Harmonica)
 
+
+
 ## How to start
+Pre-requisites:
+- VS Code
+- Docker
+- Dev Container extension
+
+Guide:
+1. Clone this reposity `git clone https://github.com/Ormared/glados-mecanum-server.git`
+2. Open repository in VS Code and follow [Dev Container Guide](/docs/devcontainers.md) to complete a local Dev Container setup
+3. From there you have a workin environment
+TODO: Complete Guide
+
+
+### Outdated
 1. Install ROS2 Humble desktop and ros-dev-tools
 2. Clone this repo `git clone https://github.com/Ormared/robo-wheel-server -b ros2`
 3. Enter folder and install dependencies 
