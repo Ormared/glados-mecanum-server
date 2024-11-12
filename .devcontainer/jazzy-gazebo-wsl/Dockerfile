@@ -22,9 +22,6 @@ RUN sudo chown ros:ros /var/run/user
 ARG WORKSPACE
 RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/install/setup.bash; fi" >> /home/ros/.bashrc
 
-sudo apt install ros-jazzy-navigation2
-sudo apt install ros-jazzy-nav2-bringup
-
 ################
 # uncomment below for nvidia support
 # Expose the nvidia driver to allow opengl 
