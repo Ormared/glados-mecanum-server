@@ -10,7 +10,9 @@
 class JointStatePublisherNode : public rclcpp::Node
 {
 public:
-    JointStatePublisherNode() : Node("joint_state_publisher_node"), last_time_(this->now())
+    JointStatePublisherNode() 
+        : Node("joint_state_publisher_node"), 
+          first_message_(true)
     {
         // Subscription to receive wheel velocities in rev/s
         subscription_ = this->create_subscription<std_msgs::msg::Float64MultiArray>(
@@ -24,10 +26,9 @@ public:
         joint_names_ = {"front_left_wheel_joint", "front_right_wheel_joint", 
                         "rear_left_wheel_joint", "rear_right_wheel_joint"};
 
-        // Initialize wheel angles
+        // Initialize wheel angles and velocities
         accumulated_angles_ = std::vector<double>(4, 0.0);
-
-        last_time_ = this->now();
+        last_angular_velocities_ = std::vector<double>(4, 0.0);
 
         RCLCPP_INFO(this->get_logger(), "Wheel to Joint State Node initialized.");
     }
@@ -42,17 +43,29 @@ private:
         }
 
         auto current_time = this->now();
-        double dt = (current_time - last_time_).nanoseconds(); // Time difference in seconds
+        if (first_message_)
+        {   
+            last_time_ = current_time;  // Update last_time_ for future computations
+
+            // Compute initial angular velocities from first message and store them
+            for (size_t i = 0; i < msg->data.size(); ++i)
+            {
+                last_angular_velocities_[i] = msg->data[i] * 2 * M_PI;
+            }
+
+            first_message_ = false;     // Mark as not the first message anymore
+            RCLCPP_INFO(this->get_logger(), "First message received, initializing last_angular_velocities_ and last_time_");
+            return;
+        }
+
+        double dt = (current_time - last_time_).seconds(); // Time difference in nanoseconds
         last_time_ = current_time;
 
-        // Convert linear velocities (m/s) to angular velocities (rad/s)
-        std::vector<double> angular_velocities(4);
+        // Convert linear velocities (rev/s) to angular velocities (rad/s)
         for (size_t i = 0; i < msg->data.size(); ++i)
-        {
-            angular_velocities[i] = msg->data[i] * 2 * M_PI;
-
-            // Accumulate the rotation angle (angular velocity * time delta)
-            accumulated_angles_[i] += angular_velocities[i] * 1e-9 * dt;
+        {   
+            accumulated_angles_[i] += last_angular_velocities_[i] * dt;
+            last_angular_velocities_[i] = msg->data[i] * 2 * M_PI;
         }
 
         // Publish joint states
@@ -68,9 +81,11 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_publisher_;
 
     std::vector<std::string> joint_names_;
-    std::vector<double> accumulated_angles_; // Store accumulated angles for each wheel
+    std::vector<double> accumulated_angles_;       // Store accumulated angles for each wheel
+    std::vector<double> last_angular_velocities_;  // Store last angular velocities for each wheel
 
-    rclcpp::Time last_time_; // Last time stamp for delta time calculation
+    rclcpp::Time last_time_;   // Last time stamp for delta time calculation
+    bool first_message_;       // Flag to handle the first message
 };
 
 int main(int argc, char **argv)
