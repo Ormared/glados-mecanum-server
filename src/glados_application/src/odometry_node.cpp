@@ -29,19 +29,22 @@ private:
         auto data = msg->data;
 
         // Extract and calculate frequencies
-        double freq1 = data[2];
-        double freq2 = data[3];
-        double freq3 = data[1];
-        double freq4 = data[0];
+        double freq1 = data[2]*2*M_PI;
+        double freq2 = data[3]*2*M_PI;
+        double freq3 = data[1]*2*M_PI;
+        double freq4 = data[0]*2*M_PI;
 
         // Constants for Mecanum Kinematics
         const double r = 0.1;  // Wheel radius
         const double l_x = 0.1575;  // Distance from the center of the robot to the wheels along the x-axis
         const double l_y = 0.215;   // Distance from the center of the robot to the wheels along the y-axis
 
+
+
         // Calculate linear and angular velocities
         double vx = r * (freq1 + freq2 + freq3 + freq4) / 4.0;
         double vy = r * (-freq1 + freq2 + freq3 - freq4) / 4.0;
+        RCLCPP_INFO(this->get_logger(), "vx: %f, vy: %f", vx, vy);
         double omega = r * (-freq1 + freq2 - freq3 + freq4) / (4.0 * (l_x + l_y));
 
         updateOdometry(vx, vy, omega);
@@ -50,15 +53,20 @@ private:
     void updateOdometry(double vx, double vy, double omega)
     {
         auto current_time = this->now();
-        double dt = (current_time - last_time_).nanoseconds();
+        RCLCPP_INFO(this->get_logger(), "current_time: %f, last_time %f", current_time.seconds(), last_time_.seconds());
+        // double dt = (current_time - last_time_).nanoseconds();
+        double dt = (current_time - last_time_).seconds();
 
         // Update pose using velocity and time
-        double delta_x = (vx * cos(theta_) - vy * sin(theta_)) * 1e-9 * dt;
-        double delta_y = (vx * sin(theta_) + vy * cos(theta_)) * 1e-9 * dt;
-        double delta_theta = omega / 1e-9 * dt;
-
+        // double delta_x = (vx * cos(theta_) - vy * sin(theta_)) * 1e-9 * dt;
+        // double delta_y = (vx * sin(theta_) + vy * cos(theta_)) * 1e-9 * dt;
+        double delta_x = (vx * cos(theta_) - vy * sin(theta_)) *  dt;
+        double delta_y = (vx * sin(theta_) + vy * cos(theta_)) *  dt;
+        double delta_theta = omega / dt;
+        
         x_ += delta_x;
         y_ += delta_y;
+        RCLCPP_INFO(this->get_logger(), "x: %f, y: %f, theta: %f", x_, y_, theta_);
         theta_ += delta_theta;
 
         publishOdometry(vx, vy, omega, current_time);
@@ -102,6 +110,8 @@ private:
 
         transform.transform.translation.x = x_;
         transform.transform.translation.y = y_;
+        // transform.transform.translation.x = 0;
+        // transform.transform.translation.y = 0;
         transform.transform.translation.z = 0.0;
         transform.transform.rotation = odom_msg.pose.pose.orientation;
 

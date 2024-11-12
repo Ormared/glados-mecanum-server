@@ -22,4 +22,23 @@ RUN sudo chown ros:ros /var/run/user
 ARG WORKSPACE
 RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/install/setup.bash; fi" >> /home/ros/.bashrc
 
+################
+# uncomment below for nvidia support
+# Expose the nvidia driver to allow opengl 
+# Dependencies for glvnd and X11.
+################
+# RUN apt-get update \
+#  && apt-get install -y -qq --no-install-recommends \
+#   libglvnd0 \
+#   libgl1 \
+#   libglx0 \
+#   libegl1 \
+#   libxext6 \
+#   libx11-6 \
+# && rm -rf /var/lib/apt/lists/*
+
+# # Env vars for the nvidia-container-runtime.
+# ENV NVIDIA_VISIBLE_DEVICES all
+# ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
+
 # RUN sudo chmod 0700 /var/run/user/
