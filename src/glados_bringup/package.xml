@@ -16,8 +16,8 @@
   <depend>glados_description</depend>
   <depend>glados_gazebo</depend>
 
-  <exec_depend>serial_communication</exec_depend>
-  <exec_depend>teleop_to_serial</exec_depend>
+  <exec_depend>glados_hardware</exec_depend>
+  <exec_depend>glados_application</exec_depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

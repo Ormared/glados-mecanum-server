@@ -5,9 +5,8 @@ project(glados_bringup)
 find_package(ament_cmake REQUIRED)
 find_package(glados_description REQUIRED)
 find_package(glados_gazebo REQUIRED)
-
-find_package(serial_communication REQUIRED)
-find_package(teleop_to_serial REQUIRED)
+find_package(glados_hardware REQUIRED)
+find_package(glados_application REQUIRED)
 
 # Install project launch files
 install(

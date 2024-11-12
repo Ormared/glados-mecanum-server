@@ -1,6 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "serial_communication/msg/int8_array.hpp"  // Custom message header
+#include "glados_hardware/msg/int8_array.hpp"  // Custom message header
 #include <termios.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -25,7 +25,7 @@ public:
         }
 
         // Subscribe to a topic
-        subscription_ = this->create_subscription<serial_communication::msg::Int8Array>(
+        subscription_ = this->create_subscription<glados_hardware::msg::Int8Array>(
             "serial_write", 10, std::bind(&SerialNode::write_to_serial, this, std::placeholders::_1));
 
         // Publish data from the serial port
@@ -77,7 +77,7 @@ private:
         return fd;
     }
 
-    void write_to_serial(const serial_communication::msg::Int8Array::SharedPtr msg)
+    void write_to_serial(const glados_hardware::msg::Int8Array::SharedPtr msg)
     {
         if (serial_port_ < 0) return;
 
@@ -104,7 +104,7 @@ private:
     std::string port_name_;
     int baud_rate_;
 
-    rclcpp::Subscription<serial_communication::msg::Int8Array>::SharedPtr subscription_;
+    rclcpp::Subscription<glados_hardware::msg::Int8Array>::SharedPtr subscription_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
 };

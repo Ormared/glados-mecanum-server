@@ -1,6 +1,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include "serial_communication/msg/int8_array.hpp"  // Custom message for serial communication
+#include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
+#include "glados_hardware/msg/int8_array.hpp"  // Custom message for serial communication
 #include <cmath>
 
 constexpr uint32_t CRC_POLYNOMIAL = 0x18005;  // Polynomial for CRC calculation
@@ -87,7 +89,12 @@ public:
             "cmd_vel", 10, std::bind(&TeleopToSerialNode::twist_callback, this, std::placeholders::_1));
 
         // Publisher for Int8Array message
-        serial_publisher_ = this->create_publisher<serial_communication::msg::Int8Array>("serial_write", 10);
+        serial_publisher_ = this->create_publisher<glados_hardware::msg::Int8Array>("serial_write", 10);
+
+        serial_subscription_ = this->create_subscription<std_msgs::msg::String>(
+            "serial_read", 10, std::bind(&TeleopToSerialNode::serial_callback, this, std::placeholders::_1));
+
+        frequency_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("wheel_frequencies", 10);
     }
 
 private:
@@ -118,13 +125,39 @@ private:
         serial_data.push_back(static_cast<uint8_t>((crc >> 8) & 0xFF)); // CRC high byte
 
         // Create the Int8Array message and publish it
-        auto serial_msg = serial_communication::msg::Int8Array();
+        auto serial_msg = glados_hardware::msg::Int8Array();
         serial_msg.data = serial_data;
         serial_publisher_->publish(serial_msg);
     }
 
+    void serial_callback(const std_msgs::msg::String::SharedPtr msg)
+    {
+        if (msg->data.size() != 34)
+        {
+            RCLCPP_WARN(this->get_logger(), "Invalid message length: %zu", msg->data.size());
+            return;
+        }
+
+        auto data = msg->data;
+
+        // Extract and calculate frequencies
+        double freq3 = (static_cast<double>(data[13]) * 256 + static_cast<double>(data[14])) / 10000;
+        double freq4 = (static_cast<double>(data[15]) * 256 + static_cast<double>(data[16])) / 10000;
+        double freq2 = (static_cast<double>(data[17]) * 256 + static_cast<double>(data[18])) / 10000;
+        double freq1 = (static_cast<double>(data[19]) * 256 + static_cast<double>(data[20])) / 10000;
+
+        std::vector<double> temp = {freq1, freq2, freq3, freq4};
+
+        auto frequency_msg = std_msgs::msg::Float64MultiArray();
+        frequency_msg.data = temp;
+
+        frequency_publisher_->publish(frequency_msg);
+    }
+
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr twist_subscription_;
-    rclcpp::Publisher<serial_communication::msg::Int8Array>::SharedPtr serial_publisher_;
+    rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr serial_publisher_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr serial_subscription_;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr frequency_publisher_;
 };
 
 int main(int argc, char *argv[])

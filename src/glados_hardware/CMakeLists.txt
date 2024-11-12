@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(teleop_to_serial)
+project(glados_hardware)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -8,11 +8,34 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(serial_communication REQUIRED)
 
+# Custom msg
+find_package(rosidl_default_generators REQUIRED)
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Int8Array.msg"
+)
+ament_export_dependencies(rosidl_default_runtime)
+rosidl_get_typesupport_target(cpp_typesupport_target
+  ${PROJECT_NAME} rosidl_typesupport_cpp)
+
+# Serial node
+add_executable(serial_node src/serial_node.cpp)
+ament_target_dependencies(serial_node rclcpp std_msgs)
+
+target_link_libraries(serial_node "${cpp_typesupport_target}")
+
+install(TARGETS
+  serial_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Teleop node
 add_executable(teleop_to_serial_node src/teleop_to_serial_node.cpp)
-ament_target_dependencies(teleop_to_serial_node rclcpp geometry_msgs serial_communication)
+ament_target_dependencies(teleop_to_serial_node rclcpp geometry_msgs std_msgs)
+
+target_link_libraries(teleop_to_serial_node "${cpp_typesupport_target}")
 
 install(TARGETS
         teleop_to_serial_node
