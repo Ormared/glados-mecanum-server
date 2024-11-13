@@ -53,8 +53,14 @@
 		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
 		"LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
 	},
+	"hostRequirements": {
+		"gpu": "optional"
+	},
 	"features": {
-	  "ghcr.io/devcontainers/features/desktop-lite:1": {}
+	  "ghcr.io/devcontainers/features/desktop-lite:1": {},
+	  "ghcr.io/devcontainers/features/nvidia-cuda:1": {
+		"cudaVersion": "12.2"
+	  }
 	},
 	"forwardPorts": [6080, 5901],
 	"portsAttributes": {
