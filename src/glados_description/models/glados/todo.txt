@@ -1,3 +1,0 @@
-sdf -> urdf
-our dimensions
-base link

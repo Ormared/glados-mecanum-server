@@ -2,7 +2,7 @@
 <sdf version="1.6">
     <model name='glados' xmlns:gz="http://gazebosim.org/schema">
       <link name='base_footprint'>
-        <pose>-0.151427 0 0 0 0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
       </link>
 
       <joint name='base_footprint_to_chassis' type='fixed'>
@@ -11,7 +11,7 @@
       </joint>
 
       <link name='chassis'>
-        <pose>-0.151427 -0 0.175 0 -0 0</pose>
+        <pose>0 0 0.0875 0 0 0</pose>
         <inertial>
           <mass>1.14395</mass>
           <inertia>
@@ -26,7 +26,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>2.01142 1 0.568726</size>
+              <size>0.65 0.245 0.05</size>
             </box>
           </geometry>
           <material>
@@ -38,14 +38,14 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>2.01142 1 0.568726</size>
+              <size>0.65 0.245 0.05</size>
             </box>
           </geometry>
         </collision>
       </link>
 
       <link name='front_left_wheel'>
-        <pose>0.554283 0.625029 -0.025 -1.5707 0 0</pose>
+        <pose relative_to="chassis">0.2 0.1625 0 -1.5707 0 0</pose>
         <inertial>
           <mass>2</mass>
           <inertia>
@@ -60,10 +60,9 @@
         <visual name='visual'>
           <pose>0 0 0 1.5707 0 0</pose>
           <geometry>
-            <!-- scale mesh to radius == 0.3 -->
             <mesh>
-            <uri>package://glados_description/models/glados/meshes/mecanum_wheel_left.STL</uri>
-              <scale>0.006 0.006 0.006</scale>
+              <uri>package://glados_description/models/glados/meshes/mecanum_wheel_left.STL</uri>
+              <scale>0.002 0.002 0.002</scale>
             </mesh>
           </geometry>
           <material>
@@ -75,7 +74,7 @@
         <collision name='collision'>
           <geometry>
             <sphere>
-              <radius>0.3</radius>
+              <radius>0.1</radius>
             </sphere>
           </geometry>
           <surface>
@@ -91,7 +90,7 @@
       </link>
 
       <link name='rear_left_wheel'>
-        <pose>-0.957138 0.625029 -0.025 -1.5707 0 0</pose>
+        <pose relative_to="chassis">-0.2 0.1625 0 -1.5707 0 0</pose>
         <inertial>
           <mass>2</mass>
           <inertia>
@@ -106,10 +105,9 @@
         <visual name='visual'>
           <pose>0 0 0 1.5707 0 0</pose>
           <geometry>
-            <!-- scale mesh to radius == 0.3 -->
             <mesh>
-            <uri>package://glados_description/models/glados/meshes/mecanum_wheel_right.STL</uri>
-              <scale>0.006 0.006 0.006</scale>
+              <uri>package://glados_description/models/glados/meshes/mecanum_wheel_right.STL</uri>
+              <scale>0.002 0.002 0.002</scale>
             </mesh>
           </geometry>
           <material>
@@ -121,7 +119,7 @@
         <collision name='collision'>
           <geometry>
             <sphere>
-              <radius>0.3</radius>
+              <radius>0.1</radius>
             </sphere>
           </geometry>
           <surface>
@@ -137,7 +135,7 @@
       </link>
 
       <link name='front_right_wheel'>
-        <pose>0.554282 -0.625029 -0.025 -1.5707 0 0</pose>
+        <pose relative_to="chassis">0.2 -0.1625 0 -1.5707 0 0</pose>
         <inertial>
           <mass>2</mass>
           <inertia>
@@ -152,10 +150,9 @@
         <visual name='visual'>
           <pose>0 0 0 1.5707 0 0</pose>
           <geometry>
-            <!-- scale mesh to radius == 0.3 -->
             <mesh>
-            <uri>package://glados_description/models/glados/meshes/mecanum_wheel_right.STL</uri>
-              <scale>0.006 0.006 0.006</scale>
+              <uri>package://glados_description/models/glados/meshes/mecanum_wheel_right.STL</uri>
+              <scale>0.002 0.002 0.002</scale>
             </mesh>
           </geometry>
           <material>
@@ -167,7 +164,7 @@
         <collision name='collision'>
           <geometry>
             <sphere>
-              <radius>0.3</radius>
+              <radius>0.1</radius>
             </sphere>
           </geometry>
           <surface>
@@ -183,7 +180,7 @@
       </link>
 
       <link name='rear_right_wheel'>
-        <pose>-0.957138 -0.625029 -0.025 -1.5707 0 0</pose>
+        <pose relative_to="chassis">-0.2 -0.1625 0 -1.5707 0 0</pose>
         <inertial>
           <mass>2</mass>
           <inertia>
@@ -198,10 +195,9 @@
         <visual name='visual'>
           <pose>0 0 0 1.5707 0 0</pose>
           <geometry>
-            <!-- scale mesh to radius == 0.3 -->
             <mesh>
-            <uri>package://glados_description/models/glados/meshes/mecanum_wheel_left.STL</uri>
-              <scale>0.006 0.006 0.006</scale>
+              <uri>package://glados_description/models/glados/meshes/mecanum_wheel_left.STL</uri>
+              <scale>0.002 0.002 0.002</scale>
             </mesh>
           </geometry>
           <material>
@@ -213,7 +209,7 @@
         <collision name='collision'>
           <geometry>
             <sphere>
-              <radius>0.3</radius>
+              <radius>0.1</radius>
             </sphere>
           </geometry>
           <surface>
@@ -227,7 +223,6 @@
           </surface>
         </collision>
       </link>
-
 
       <joint name='front_left_wheel_joint' type='revolute'>
         <parent>chassis</parent>
@@ -278,7 +273,7 @@
       </joint>
 
       <link name="lidar_link">
-        <pose relative_to="chassis">0.95571 0 0.334363 0 0 0</pose>
+        <pose relative_to="chassis">0.325 0 0.045 0 0 0</pose>
         <inertial>
           <mass>0.1</mass>
           <inertia>
@@ -289,22 +284,24 @@
         </inertial>
         <collision name="collision">
           <geometry>
-            <box>
-              <size>0.1 0.1 0.1</size>
-            </box>
+            <cylinder>
+              <radius>0.04</radius>
+              <length>0.04</length>
+            </cylinder>
           </geometry>
         </collision>
         <visual name="visual">
           <geometry>
-            <box>
-              <size>0.1 0.1 0.1</size>
-            </box>
+            <cylinder>
+              <radius>0.04</radius>
+              <length>0.04</length>
+            </cylinder>
           </geometry>
         </visual>
         <sensor name='gpu_lidar' type='gpu_lidar'>
           <pose>0 0 0 0 0 0</pose>
           <topic>lidar</topic>
-           <gz_frame_id>lidar_link</gz_frame_id>
+          <gz_frame_id>lidar_link</gz_frame_id>
           <update_rate>10</update_rate>
           <lidar>
             <scan>
@@ -343,9 +340,9 @@
         <front_right_joint>front_right_wheel_joint</front_right_joint>
         <back_left_joint>rear_left_wheel_joint</back_left_joint>
         <back_right_joint>rear_right_wheel_joint</back_right_joint>
-        <wheel_separation>1.25</wheel_separation>
-        <wheelbase>1.511</wheelbase>
-        <wheel_radius>0.3</wheel_radius>
+        <wheel_separation>0.245</wheel_separation>
+        <wheelbase>0.4</wheelbase>
+        <wheel_radius>0.1</wheel_radius>
         <min_acceleration>-5</min_acceleration>
         <max_acceleration>5</max_acceleration>
       </plugin>

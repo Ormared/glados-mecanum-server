@@ -64,7 +64,7 @@
       <self_collide>true</self_collide>
       <pose>0 0 1 0 0 0</pose>
       <include merge="true">
-        <uri>package://glados_description/models/test</uri>
+        <uri>package://glados_description/models/glados</uri>
       </include>
 
       <plugin

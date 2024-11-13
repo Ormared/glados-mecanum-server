@@ -6,10 +6,12 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
+    pkg_project_bringup = get_package_share_directory('glados_bringup')
     pkg_project_description = get_package_share_directory('glados_description')
+    pkg_project_hardware = get_package_share_directory('glados_hardware')
 
     # Load the SDF file from "description" package
-    sdf_file  =  os.path.join(pkg_project_description, 'models', 'glados', 'model.sdf')
+    sdf_file = os.path.join(pkg_project_description, 'models', 'glados', 'model.sdf')
     with open(sdf_file, 'r') as infp:
         robot_desc = infp.read()
 
@@ -29,16 +31,16 @@ def generate_launch_description():
     rviz = Node(
        package='rviz2',
        executable='rviz2',
-    #    arguments=['-d', os.path.join(pkg_project_bringup, 'config', 'diff_drive.rviz')],
+       arguments=['-d', os.path.join(pkg_project_bringup, 'config', 'rviz.rviz')],
     )
 
     return LaunchDescription([
-        # Node(
-        #     package="glados_hardware",
-        #     executable="serial_node",
-        #     name="serial_node",
-        #     parameters=["src/serial_communication/config/params.yaml"]
-        # ),
+        Node(
+            package="glados_hardware",
+            executable="serial_node",
+            name="serial_node",
+            parameters=[os.path.join(pkg_project_hardware, 'config', 'params.yaml')]
+        ),
         Node(
             package="glados_hardware",
             executable="teleop_to_serial_node",
