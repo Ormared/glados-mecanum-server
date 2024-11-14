@@ -38,10 +38,10 @@ private:
 
             auto data = msg->data;
 
-            double freq1 = data[2] * 2 * M_PI;
-            double freq2 = data[3] * 2 * M_PI;
-            double freq3 = data[1] * 2 * M_PI;
-            double freq4 = data[0] * 2 * M_PI;
+            double freq1 = data[0] * 2 * M_PI;
+            double freq2 = data[1] * 2 * M_PI;
+            double freq3 = data[2] * 2 * M_PI;
+            double freq4 = data[3] * 2 * M_PI;
 
             last_vx_ = r * (freq1 + freq2 + freq3 + freq4) / 4.0;
             last_vy_ = r * (-freq1 + freq2 + freq3 - freq4) / 4.0;

@@ -111,7 +111,7 @@ private:
         // Prepare the serial data message
         std::vector<uint8_t> serial_data = {
             DEVICE_ID, MESSAGE_LENGTH, MESSAGE_ID,
-	    0, 0, 0, 0,
+	        0, 0, 0, 0,
             static_cast<uint8_t>((freqs[2] >> 8) & 0xFF), static_cast<uint8_t>(freqs[2] & 0xFF),
             static_cast<uint8_t>((freqs[3] >> 8) & 0xFF), static_cast<uint8_t>(freqs[3] & 0xFF),
             static_cast<uint8_t>((freqs[1] >> 8) & 0xFF), static_cast<uint8_t>(freqs[1] & 0xFF),
@@ -132,7 +132,7 @@ private:
 
     void serial_callback(const std_msgs::msg::String::SharedPtr msg)
     {
-        if (msg->data.size() != 34)
+        if (msg->data.size() != 39)
         {
             RCLCPP_WARN(this->get_logger(), "Invalid message length: %zu", msg->data.size());
             return;
