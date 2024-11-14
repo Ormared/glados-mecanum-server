@@ -8,7 +8,6 @@ def generate_launch_description():
 
     pkg_project_bringup = get_package_share_directory('glados_bringup')
     pkg_project_description = get_package_share_directory('glados_description')
-    pkg_project_hardware = get_package_share_directory('glados_hardware')
 
     # Load the SDF file from "description" package
     sdf_file = os.path.join(pkg_project_description, 'models', 'glados', 'model.sdf')
@@ -39,7 +38,7 @@ def generate_launch_description():
             package="glados_hardware",
             executable="serial_node",
             name="serial_node",
-            parameters=[os.path.join(pkg_project_hardware, 'config', 'params.yaml')]
+            parameters=["src/glados_hardware/config/params.yaml"]
         ),
         Node(
             package="glados_hardware",
