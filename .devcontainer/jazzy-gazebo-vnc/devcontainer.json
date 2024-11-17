@@ -1,0 +1,94 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+	"dockerFile": "Dockerfile",
+	"build": {
+		"args": {
+			"WORKSPACE": "${containerWorkspaceFolder}"
+		}
+	},
+	"remoteUser": "ros",
+	"runArgs": [
+		"--privileged",
+		// "--network=host",
+		"--ipc=host",
+		"--cap-add=SYS_PTRACE",
+		"--security-opt=seccomp:unconfined",
+		"--security-opt=apparmor:unconfined",
+		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
+		"--volume=${localEnv:XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority",
+		"--volume=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history:/root/.bash_history",
+		"--env=DISPLAY=${localEnv:DISPLAY}",
+		// "--volume=/mnt/wslg:/mnt/wslg",
+		"--gpus=all",
+		// uncomment to use intel iGPU
+		"--volume=/dev/dri:/dev/dri",
+		// "--device=/dev/dri/card0:/dev/dri/card0",
+  		// "--device=/dev/dri/card1:/dev/dri/card1",
+  		// "--device=/dev/dri/renderD128:/dev/dri/renderD128",
+  		// "--device=/dev/dri/renderD129:/dev/dri/renderD129"
+	],
+	// "mounts": [
+        // 	// "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
+	// 	// Uncomment to allow the container to access the X server on the host e.g. to run Rviz and other GUI tools
+	// 	// {
+	// 	// 	"source": "/tmp/.X11-unix",
+	// 	// 	"target": "/tmp/.X11-unix",
+	// 	// 	// "type": "bind"
+	// 	// },
+	// 	// {
+	// 	// 	"source": "${localEnv:XAUTHORITY:-$HOME/.Xauthority}",
+	// 	// 	"target": "/root/.Xauthority",
+	// 	// 	// "type": "bind"
+	// 	// },
+	// 	// // Uncomment to persist bash history between sessions
+	// 	// {
+	// 	// 	"source": "${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history",
+	// 	// 	"target": "/root/.bash_history",
+	// 	// 	// "type": "bind"
+	// 	// }
+	// ],
+	"containerEnv": {
+		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
+		"QT_QPA_PLATFORM": "vnc",
+		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
+		"XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
+		// "XDG_RUNTIME_DIR": "/var/run/user/1000",
+		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
+		// "LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
+	},
+	"hostRequirements": {
+		"gpu": "optional"
+	},
+	"features": {
+	  "ghcr.io/devcontainers/features/desktop-lite:1": {}
+	},
+	// "forwardPorts": [6080, 5901],
+	"portsAttributes": {
+	  "6080": {
+	    "label": "Desktop(Web)"
+	    // "onAutoForward": "notify"
+	  },
+	  "5901":{
+	    "label": "Desktop(VNC)"
+	    // "onAutoForward": "notify"
+	  }
+	},
+	// Set *default* container specific settings.json values on container create.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"althack.ament-task-provider",
+				"DotJoshJohnson.xml",
+				"ms-iot.vscode-ros",
+				"ms-python.python",
+				"ms-vscode.cpptools",
+				"redhat.vscode-yaml",
+				"smilerobotics.urdf",
+				"streetsidesoftware.code-spell-checker",
+				"twxs.cmake",
+				"yzhang.markdown-all-in-one",
+				"zachflower.uncrustify"
+			]
+		}
+	}
+}
