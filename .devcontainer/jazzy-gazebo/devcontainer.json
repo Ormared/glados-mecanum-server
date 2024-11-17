@@ -19,9 +19,13 @@
 		"--volume=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history:/root/.bash_history",
 		"--env=DISPLAY=${localEnv:DISPLAY}",
 		// "--volume=/mnt/wslg:/mnt/wslg",
-		// "--gpus all"
+		"--gpus=all",
 		// uncomment to use intel iGPU
-		"--device=/dev/dri"
+		"--volume=/dev/dri:/dev/dri",
+		// "--device=/dev/dri/card0:/dev/dri/card0",
+  		// "--device=/dev/dri/card1:/dev/dri/card1",
+  		// "--device=/dev/dri/renderD128:/dev/dri/renderD128",
+  		// "--device=/dev/dri/renderD129:/dev/dri/renderD129"
 	],
 	// "mounts": [
         // 	// "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
@@ -44,31 +48,16 @@
 	// 	// }
 	// ],
 	"containerEnv": {
-		// "DISPLAY": ":0",
 		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
-		// "QT_QPA_PLATFORM": "vnc",
+		"QT_QPA_PLATFORM": "xcb",
 		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
-		// "XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
-		"XDG_RUNTIME_DIR": "/var/run/user/1000",
+		"XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
+		// "XDG_RUNTIME_DIR": "/var/run/user/1000",
 		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
-		"LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
+		// "LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
 	},
 	"hostRequirements": {
 		"gpu": "optional"
-	},
-	"features": {
-	  "ghcr.io/devcontainers/features/desktop-lite:1": {}
-	},
-	// "forwardPorts": [6080, 5901],
-	"portsAttributes": {
-	  "6080": {
-	    "label": "Desktop(Web)"
-	    // "onAutoForward": "notify"
-	  },
-	  "5901":{
-	    "label": "Desktop(VNC)"
-	    // "onAutoForward": "notify"
-	  }
 	},
 	// Set *default* container specific settings.json values on container create.
 	"customizations": {
