@@ -4,16 +4,47 @@
     "version": "2.0.0",
     "tasks": [
         // Build tasks
+        // {
+        //     "label": "build",
+        //     "detail": "Build workspace (default)",
+        //     "type": "shell",
+        //     "command": "./build.sh",
+        //     "group": {
+        //         "kind": "build",
+        //         "isDefault": true
+        //     },
+        //     "problemMatcher": "$gcc"
+        // },
         {
             "label": "build",
             "detail": "Build workspace (default)",
             "type": "shell",
+            "command": "colcon build",
+        },
+        {
+            "label": "build_release",
+            "detail": "Build workspace (release)",
+            "type": "shell",
             "command": "./build.sh",
-            "group": {
-                "kind": "build",
-                "isDefault": true
+            "options": {
+                "env": {
+                    "BUILD_TYPE": "Release"
+                }
             },
+            "group": "build",
             "problemMatcher": "$gcc"
+        },
+        {
+            "label": "la_gazebo",
+            "detail": "Launch glados gazebo launch file",
+            "type": "shell",
+            "command": "ros2 launch glados_gazebo glados_gazebo.launch.py",
+        },
+        {
+            "label": "teleop_keyboard",
+            "detail": "Launch teleop keyboard",
+            "type": "shell",
+            "command": "ros2 run teleop_twist_keyboard teleop_twist_keyboard",
         },
         {
             "label": "debug",
