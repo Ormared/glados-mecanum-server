@@ -6,7 +6,7 @@ FROM althack/ros2:jazzy-gazebo
 #
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-   && apt-get -y install --no-install-recommends libxkbcommon-x11-0 libxcb-xinerama0 x11-apps \
+   && apt-get -y install --no-install-recommends libxkbcommon-x11-0 libxcb-xinerama0 x11-apps iputils-ping \
    # Clean up
    && apt-get autoremove -y \
    && apt-get clean -y \
