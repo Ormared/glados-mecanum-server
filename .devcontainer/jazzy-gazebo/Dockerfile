@@ -6,12 +6,29 @@ FROM althack/ros2:jazzy-gazebo
 #
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-   && apt-get -y install --no-install-recommends libxkbcommon-x11-0 libxcb-xinerama0 libxcb-xinput0 x11-apps iputils-ping \
+   && apt-get -y install --no-install-recommends \
+   libxkbcommon-x11-0 \
+   libxcb-xinerama0 \
+   libxcb-xinput0 \
+   x11-apps \
+   iputils-ping \
    # Clean up
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
+
+RUN apt-get update \
+   && apt-get -y install --no-install-recommends \
+   ros-jazzy-navigation2 \
+   ros-jazzy-nav2-bringup \
+   # Clean up
+   && apt-get autoremove -y \
+   && apt-get clean -y \
+   && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=dialog
+
+
 
 # RUN mkdir -p /var/run/user && chmod 755 /var/run/user
 RUN sudo chown ros:ros /var/run/user
