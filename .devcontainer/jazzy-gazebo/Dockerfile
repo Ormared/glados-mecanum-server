@@ -22,13 +22,17 @@ RUN apt-get update \
    && apt-get -y install --no-install-recommends \
    ros-jazzy-navigation2 \
    ros-jazzy-nav2-bringup \
+   ros-jazzy-twist-mux \
+   ros-jazzy-robot-localization \
    # Clean up
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
 
-
+# RUN git clone https://github.com/Slamtec/rplidar_sdk \
+#       && cd rplidar_sdk \
+#       && make
 
 # RUN mkdir -p /var/run/user && chmod 755 /var/run/user
 RUN sudo chown ros:ros /var/run/user

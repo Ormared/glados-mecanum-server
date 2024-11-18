@@ -35,10 +35,22 @@
             "problemMatcher": "$gcc"
         },
         {
+            "label": "source local",
+            "detail": "Source local workspace",
+            "type": "shell",
+            "command": "source install/setup.bash",
+        },
+        {
+            "label": "rqt graph",
+            "detail": "Launch rqt graph",
+            "type": "shell",
+            "command": "rqt_graph",
+        },
+        {
             "label": "la_gazebo",
             "detail": "Launch glados gazebo launch file",
             "type": "shell",
-            "command": "ros2 launch glados_gazebo glados_gazebo.launch.py",
+            "command": "ros2 launch glados_bringup glados_gazebo.launch.py",
         },
         {
             "label": "teleop_keyboard",
