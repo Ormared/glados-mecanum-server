@@ -24,11 +24,13 @@ RUN apt-get update \
    ros-jazzy-nav2-bringup \
    ros-jazzy-twist-mux \
    ros-jazzy-robot-localization \
+   ros-jazzy-slam-toolbox \
    # Clean up
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
+
 
 # RUN git clone https://github.com/Slamtec/rplidar_sdk \
 #       && cd rplidar_sdk \
