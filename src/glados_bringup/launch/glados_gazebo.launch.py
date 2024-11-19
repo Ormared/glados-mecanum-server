@@ -123,6 +123,6 @@ def generate_launch_description():
         ekf_robot_localization,
         DeclareLaunchArgument('rviz', default_value='true',
                               description='Open RViz.'),
-        # rviz
-        foxglove
+        rviz
+        # foxglove
     ])

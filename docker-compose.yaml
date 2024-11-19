@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  ros2_robot:
+    image: ro2_glados
+    container_name: ros2_glados
+    network_mode: host       
+    privileged: true         
+    devices:
+      - "/dev:/dev"          
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix  
+      - ./ros2_ws:/root/ros2_ws 
+    tty: true
+    stdin_open: true

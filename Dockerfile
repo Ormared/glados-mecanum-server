@@ -32,8 +32,23 @@ RUN colcon build --packages-ignore glados_gazebo
 FROM althack/ros2:jazzy-base AS final
 COPY --from=base /workspace/install /workspace/install
 COPY src /workspace/src
+COPY entrypoint.sh /workspace/
 
+RUN apt-get update \
+  && apt-get -y install --no-install-recommends \
+  ros-jazzy-foxglove-bridge \
+  && apt-get autoremove -y \
+  && apt-get clean -y \
+  && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=dialog
 WORKDIR /workspace
 
-CMD ["ros2", "launch", "glados_bringup", "glados_onrobot.launch.py"]
+#CMD ["ros2", "launch", "glados_bringup", "glados_onrobot.launch.py"]
+#ENTRYPOINT ["entrypoint.sh"]
+#CMD ["/bin/bash", "-c"]
+# CMD ["ros2", "launch", "glados_bringup", "glados_onrobot.launch.py"]
+ENTRYPOINT ["/bin/bash", "-c", "source install/setup.bash && ros2 launch glados_bringup glados_onrobot.launch.py"]
+
+
+
 

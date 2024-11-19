@@ -50,8 +50,8 @@ def generate_launch_description():
         ),
         Node(
             package="foxglove_bridge",
-            executable="foxglove_bridge_launch.xml",
+            executable="foxglove_bridge",
             name="foxglove_bridge",
         ),
-        robot_state_publisher
+        # robot_state_publisher
     ])

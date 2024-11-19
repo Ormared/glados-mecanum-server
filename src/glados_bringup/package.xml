@@ -11,11 +11,10 @@
 
   <!-- <depend>joint_state_publisher_gui</depend> -->
 
-  <depend>ros_gz</depend>
   <depend>sdformat_urdf</depend>
   <depend>glados_description</depend>
-  <depend>glados_gazebo</depend>
 
+  <exec_depend>foxglove_bridge</exec_depend>
   <exec_depend>glados_hardware</exec_depend>
   <exec_depend>glados_application</exec_depend>
   <exec_depend>robot_localization</exec_depend>
