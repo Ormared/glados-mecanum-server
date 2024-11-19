@@ -39,6 +39,7 @@ ENV DEBIAN_FRONTEND=dialog
 # RUN mkdir -p /var/run/user && chmod 755 /var/run/user
 RUN sudo chown ros:ros /var/run/user
 
+ENV GZ_VERSION=harmonic
 # USER ros
 
 # Set up auto-source of workspace for ros user
