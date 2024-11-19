@@ -25,11 +25,19 @@ void SerialGzAdapterNode::serialWriteCallback(const glados_hardware::msg::Int8Ar
     const double ly = 0.215;
 
     // Extract frequencies from specific byte pairs
-    double freq3 = (static_cast<int16_t>(msg->data[7]) * 256 + static_cast<int16_t>(msg->data[8])) / 10000.;
-    double freq4 = (static_cast<int16_t>(msg->data[9]) * 256 + static_cast<int16_t>(msg->data[10])) / 10000.;
-    double freq2 = (static_cast<int16_t>(msg->data[11]) * 256 + static_cast<int16_t>(msg->data[12])) / 10000.;
-    double freq1 = (static_cast<int16_t>(msg->data[13]) * 256 + static_cast<int16_t>(msg->data[14])) / 10000.;
-
+    double freq3 = static_cast<int16_t>(
+        (static_cast<int16_t>(msg->data[7]) << 8) & 0xFFFF |
+        (static_cast<int16_t>(msg->data[8]) & 0xFF)) / 10000.;
+    double freq4 = static_cast<int16_t>(
+        (static_cast<int16_t>(msg->data[9]) << 8) & 0xFFFF |
+        (static_cast<int16_t>(msg->data[10]) & 0xFF)) / 10000.;
+    double freq2 = static_cast<int16_t>(
+        (static_cast<int16_t>(msg->data[11]) << 8) & 0xFFFF |
+        (static_cast<int16_t>(msg->data[12]) & 0xFF)) / 10000.;    
+    double freq1 = static_cast<int16_t>(
+        (static_cast<int16_t>(msg->data[13]) << 8) & 0xFFFF |
+        (static_cast<int16_t>(msg->data[14]) & 0xFF)) / 10000.;    
+            
     // Mecanum wheel kinematics conversion
     geometry_msgs::msg::Twist twist;
     twist.linear.x = r * (freq1 + freq2 + freq3 + freq4) / 4.0;
@@ -50,7 +58,7 @@ void SerialGzAdapterNode::jointStateCallback(const sensor_msgs::msg::JointState:
     double dt = (current_time - prev_time_).seconds();
 
     std::vector<int16_t> wheel_velocities; // in rev/s
-    for (size_t i = 0; i < msg->velocity.size(); ++i) {
+    for (size_t i = 1; i <= 4; ++i) {
         double velocity = (msg->position[i] - prev_joint_state_.position[i]) / (dt * 2 * M_PI);
         wheel_velocities.push_back(velocity * 10000);
     }
@@ -81,6 +89,8 @@ void SerialGzAdapterNode::jointStateCallback(const sensor_msgs::msg::JointState:
         static_cast<uint8_t>(wheel_velocities[0] & 0xFF),
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
+
+    RCLCPP_INFO(this->get_logger(), "Sent: %d %d %d %d", wheel_velocities[0], wheel_velocities[1], wheel_velocities[2], wheel_velocities[3]);
 
     serial_read_pub_->publish(serial_msg);
 

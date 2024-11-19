@@ -71,10 +71,10 @@ std::vector<int16_t> toFreqs(float v_x, float v_y, float omega)
     std::vector<int16_t> freqs(4);
 
     // Calculate the frequencies for each wheel (simplified kinematics)
-    freqs[0] = static_cast<int16_t>(MAX_FREQ * round((1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI)));
-    freqs[1] = static_cast<int16_t>(MAX_FREQ * round((1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI)));
-    freqs[2] = static_cast<int16_t>(MAX_FREQ * round((1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI)));
-    freqs[3] = static_cast<int16_t>(MAX_FREQ * round((1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI)));
+    freqs[0] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI));
+    freqs[1] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI));
+    freqs[2] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI));
+    freqs[3] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI));
 
     return freqs;
 }
@@ -107,6 +107,8 @@ private:
         // Convert Twist data to motor frequencies
         auto freqs = toFreqs(msg->linear.x, msg->linear.y, msg->angular.z);
 	// auto freqs = std::vector<uint16_t>( {5000, 5000, 0, 0} );
+
+        RCLCPP_INFO(this->get_logger(), "Sending: %d %d %d %d", freqs[0], freqs[1], freqs[2], freqs[3]);
 
         // Prepare the serial data message
         std::vector<uint8_t> serial_data = {
@@ -141,10 +143,12 @@ private:
         auto data = msg->data;
 
         // Extract and calculate frequencies
-        double freq3 = (static_cast<double>(data[13]) * 256 + static_cast<double>(data[14])) / 10000;
-        double freq4 = (static_cast<double>(data[15]) * 256 + static_cast<double>(data[16])) / 10000;
-        double freq2 = (static_cast<double>(data[17]) * 256 + static_cast<double>(data[18])) / 10000;
-        double freq1 = (static_cast<double>(data[19]) * 256 + static_cast<double>(data[20])) / 10000;
+        double freq3 = (static_cast<int16_t>(data[13]) * 256 + static_cast<int16_t>(data[14])) / 10000.;
+        double freq4 = (static_cast<int16_t>(data[15]) * 256 + static_cast<int16_t>(data[16])) / 10000.;
+        double freq2 = (static_cast<int16_t>(data[17]) * 256 + static_cast<int16_t>(data[18])) / 10000.;
+        double freq1 = (static_cast<int16_t>(data[19]) * 256 + static_cast<int16_t>(data[20])) / 10000.;
+
+        RCLCPP_INFO(this->get_logger(), "Received: %f %f %f %f", freq1, freq2, freq3, freq4);
 
         std::vector<double> temp = {freq1, freq2, freq3, freq4};
 
