@@ -18,6 +18,8 @@ RUN apt-get update \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
 
+RUN echo "export GZ_HARMONIC" >> /home/ros/.bashrc
+
 RUN apt-get update \
    && apt-get -y install --no-install-recommends \
    ros-jazzy-navigation2 \
@@ -25,6 +27,7 @@ RUN apt-get update \
    ros-jazzy-twist-mux \
    ros-jazzy-robot-localization \
    ros-jazzy-slam-toolbox \
+   ros-jazzy-foxglove-bridge \
    # Clean up
    && apt-get autoremove -y \
    && apt-get clean -y \
@@ -38,8 +41,6 @@ ENV DEBIAN_FRONTEND=dialog
 
 # RUN mkdir -p /var/run/user && chmod 755 /var/run/user
 RUN sudo chown ros:ros /var/run/user
-
-# USER ros
 
 # Set up auto-source of workspace for ros user
 ARG WORKSPACE

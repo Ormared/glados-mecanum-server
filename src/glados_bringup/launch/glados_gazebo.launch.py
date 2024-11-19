@@ -85,6 +85,12 @@ def generate_launch_description():
        condition=IfCondition(LaunchConfiguration('rviz'))
     )
 
+    foxglove = Node(
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        name="foxglove_bridge",
+    )
+
     # Bridge ROS topics and Gazebo messages for establishing communication
     bridge = Node(
         package='ros_gz_bridge',
@@ -117,5 +123,6 @@ def generate_launch_description():
         ekf_robot_localization,
         DeclareLaunchArgument('rviz', default_value='true',
                               description='Open RViz.'),
-        rviz
+        # rviz
+        foxglove
     ])

@@ -48,5 +48,10 @@ def generate_launch_description():
             executable="odometry_node",
             name="odometry"
         ),
+        Node(
+            package="foxglove_bridge",
+            executable="foxglove_bridge_launch.xml",
+            name="foxglove_bridge",
+        ),
         robot_state_publisher
     ])
