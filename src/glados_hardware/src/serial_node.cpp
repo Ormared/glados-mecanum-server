@@ -29,7 +29,7 @@ public:
             "serial_write", 10, std::bind(&SerialNode::write_to_serial, this, std::placeholders::_1));
 
         // Publish data from the serial port
-        publisher_ = this->create_publisher<std_msgs::msg::String>("serial_read", 10);
+        publisher_ = this->create_publisher<glados_hardware::msg::Int8Array>("serial_read", 10);
 
         // Timer to periodically check the serial port for data
         timer_ = this->create_wall_timer(
@@ -89,15 +89,16 @@ private:
 
     void read_from_serial()
     {
-        if (serial_port_ < 0) return;
+        // if (serial_port_ < 0) return;
 
-        char buffer[39];
-        ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
-        if (bytes_read > 0) {
-            auto message = std_msgs::msg::String();
-            message.data = std::string(buffer, bytes_read);
-            publisher_->publish(message);
-        }
+        // char buffer[39];
+        // ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
+        // if (bytes_read > 0) {
+        //     auto message = std_msgs::msg::String();
+        //     message.data = std::string(buffer, bytes_read);
+        //     publisher_->publish(message);
+        // }
+        return;
     }
 
     int serial_port_;
@@ -105,7 +106,7 @@ private:
     int baud_rate_;
 
     rclcpp::Subscription<glados_hardware::msg::Int8Array>::SharedPtr subscription_;
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
+    rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
 };
 

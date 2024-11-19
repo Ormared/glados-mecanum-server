@@ -82,11 +82,43 @@ def generate_launch_description():
         output='screen'
     )
 
+    # Teleop
+    teleop = Node(
+        package='glados_hardware',
+        executable='teleop_to_serial_node',
+        name='teleop'
+    )
+
+    # Serial gz adapter
+    serial_gz_adapter = Node(
+        package='glados_hardware',
+        executable='serial_gz_adapter_node',
+        name='serial_gz_adapter'
+    )
+
+    # Joint state publisher
+    joint_state_publisher = Node(
+        package='glados_application',
+        executable='joint_state_publisher_node',
+        name='joint_state_publisher'
+    )
+
+    # Odometry publisher
+    odometry_publisher = Node(
+        package='glados_application',
+        executable='odometry_node',
+        name='odometry_publisher'
+    )
+
     return LaunchDescription([
         gz_sim,
         DeclareLaunchArgument('rviz', default_value='true',
                               description='Open RViz.'),
         bridge,
         robot_state_publisher,
+        teleop,
+        serial_gz_adapter,
+        joint_state_publisher,
+        odometry_publisher,
         rviz
     ])

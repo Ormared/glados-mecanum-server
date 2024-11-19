@@ -91,7 +91,7 @@ public:
         // Publisher for Int8Array message
         serial_publisher_ = this->create_publisher<glados_hardware::msg::Int8Array>("serial_write", 10);
 
-        serial_subscription_ = this->create_subscription<std_msgs::msg::String>(
+        serial_subscription_ = this->create_subscription<glados_hardware::msg::Int8Array>(
             "serial_read", 10, std::bind(&TeleopToSerialNode::serial_callback, this, std::placeholders::_1));
 
         frequency_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("wheel_frequencies", 10);
@@ -130,7 +130,7 @@ private:
         serial_publisher_->publish(serial_msg);
     }
 
-    void serial_callback(const std_msgs::msg::String::SharedPtr msg)
+    void serial_callback(const glados_hardware::msg::Int8Array::SharedPtr msg)
     {
         if (msg->data.size() != 39)
         {
@@ -156,7 +156,7 @@ private:
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr twist_subscription_;
     rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr serial_publisher_;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr serial_subscription_;
+    rclcpp::Subscription<glados_hardware::msg::Int8Array>::SharedPtr serial_subscription_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr frequency_publisher_;
 };
 
