@@ -71,10 +71,10 @@ std::vector<int16_t> toFreqs(float v_x, float v_y, float omega)
     std::vector<int16_t> freqs(4);
 
     // Calculate the frequencies for each wheel (simplified kinematics)
-    freqs[0] = static_cast<int16_t>(MAX_FREQ * round((1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI)));
-    freqs[1] = static_cast<int16_t>(MAX_FREQ * round((1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI)));
-    freqs[2] = static_cast<int16_t>(MAX_FREQ * round((1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI)));
-    freqs[3] = static_cast<int16_t>(MAX_FREQ * round((1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI)));
+    freqs[0] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI));
+    freqs[1] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI));
+    freqs[2] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI));
+    freqs[3] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI));
 
     return freqs;
 }
@@ -91,7 +91,7 @@ public:
         // Publisher for Int8Array message
         serial_publisher_ = this->create_publisher<glados_hardware::msg::Int8Array>("serial_write", 10);
 
-        serial_subscription_ = this->create_subscription<std_msgs::msg::String>(
+        serial_subscription_ = this->create_subscription<glados_hardware::msg::Int8Array>(
             "serial_read", 10, std::bind(&TeleopToSerialNode::serial_callback, this, std::placeholders::_1));
 
         frequency_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("wheel_frequencies", 10);
@@ -107,6 +107,8 @@ private:
         // Convert Twist data to motor frequencies
         auto freqs = toFreqs(msg->linear.x, msg->linear.y, msg->angular.z);
 	// auto freqs = std::vector<uint16_t>( {5000, 5000, 0, 0} );
+
+        RCLCPP_INFO(this->get_logger(), "Sending: %d %d %d %d", freqs[0], freqs[1], freqs[2], freqs[3]);
 
         // Prepare the serial data message
         std::vector<uint8_t> serial_data = {
@@ -130,7 +132,7 @@ private:
         serial_publisher_->publish(serial_msg);
     }
 
-    void serial_callback(const std_msgs::msg::String::SharedPtr msg)
+    void serial_callback(const glados_hardware::msg::Int8Array::SharedPtr msg)
     {
         if (msg->data.size() != 39)
         {
@@ -141,10 +143,18 @@ private:
         auto data = msg->data;
 
         // Extract and calculate frequencies
-        double freq3 = (static_cast<double>(data[13]) * 256 + static_cast<double>(data[14])) / 10000;
-        double freq4 = (static_cast<double>(data[15]) * 256 + static_cast<double>(data[16])) / 10000;
-        double freq2 = (static_cast<double>(data[17]) * 256 + static_cast<double>(data[18])) / 10000;
-        double freq1 = (static_cast<double>(data[19]) * 256 + static_cast<double>(data[20])) / 10000;
+        double freq3 = static_cast<int16_t>(
+            ((static_cast<int16_t>(msg->data[13]) << 8) & 0xFFFF) |
+            (static_cast<int16_t>(msg->data[14]) & 0xFF)) / 10000.;
+        double freq4 = static_cast<int16_t>(
+            ((static_cast<int16_t>(msg->data[15]) << 8) & 0xFFFF) |
+            (static_cast<int16_t>(msg->data[16]) & 0xFF)) / 10000.;
+        double freq2 = static_cast<int16_t>(
+            ((static_cast<int16_t>(msg->data[17]) << 8) & 0xFFFF) |
+            (static_cast<int16_t>(msg->data[18]) & 0xFF)) / 10000.;    
+        double freq1 = static_cast<int16_t>(
+            ((static_cast<int16_t>(msg->data[19]) << 8) & 0xFFFF) |
+            (static_cast<int16_t>(msg->data[20]) & 0xFF)) / 10000.;   
 
         std::vector<double> temp = {freq1, freq2, freq3, freq4};
 
@@ -156,7 +166,7 @@ private:
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr twist_subscription_;
     rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr serial_publisher_;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr serial_subscription_;
+    rclcpp::Subscription<glados_hardware::msg::Int8Array>::SharedPtr serial_subscription_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr frequency_publisher_;
 };
 

@@ -10,6 +10,7 @@ endif()
   find_package(rclcpp REQUIRED)
   find_package(std_msgs REQUIRED)
   find_package(geometry_msgs REQUIRED)
+  find_package(sensor_msgs REQUIRED)
 
 # Custom msg
   find_package(rosidl_default_generators REQUIRED)
@@ -44,7 +45,6 @@ endif()
 
 # Voltmeter node
   add_executable(digital_voltmeter_node src/digital_voltmeter_node.cpp)
-  include_directories(include)
 
   ament_target_dependencies(digital_voltmeter_node
   rclcpp
@@ -52,6 +52,21 @@ endif()
 
   install(TARGETS digital_voltmeter_node
   DESTINATION lib/${PROJECT_NAME})
+
+# Serial gazebo adapter node
+  include_directories(
+    include/${PROJECT_NAME}
+  )
+
+  add_executable(serial_gz_adapter_node src/serial_gz_adapter_node.cpp)
+
+  target_link_libraries(serial_gz_adapter_node "${cpp_typesupport_target}")
+
+  ament_target_dependencies(serial_gz_adapter_node rclcpp geometry_msgs sensor_msgs std_msgs)
+
+  install(TARGETS serial_gz_adapter_node
+  DESTINATION lib/${PROJECT_NAME})
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

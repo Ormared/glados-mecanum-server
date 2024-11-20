@@ -7,18 +7,19 @@
 #include <string>
 #include <cmath>
 
-const double r = 0.1;  // Wheel radius
-const double l_x = 0.1575;  // Distance along x-axis
-const double l_y = 0.215;   // Distance along y-axis
+// Constants
+constexpr double WHEEL_RADIUS = 0.1;   // Wheel radius in meters
+constexpr double BASE_LENGTH_X = 0.1575;  // Half distance between wheels along x-axis
+constexpr double BASE_LENGTH_Y = 0.215;   // Half distance between wheels along y-axis
 
 class OdometryNode : public rclcpp::Node
 {
 public:
-    OdometryNode() : 
-        Node("odometry_node"),
-        last_vx_(0.0), last_vy_(0.0), last_omega_(0.0),
-        x_(0.0), y_(0.0), theta_(0.0),
-        first_msg_(true), last_time_(this->now())
+    OdometryNode() 
+        : Node("odometry_node"),
+          x_(0.0), y_(0.0), theta_(0.0),
+          last_vx_(0.0), last_vy_(0.0), last_omega_(0.0),
+          first_msg_(true), last_time_(this->now())
     {
         subscription_ = this->create_subscription<std_msgs::msg::Float64MultiArray>(
             "wheel_frequencies", 10,
@@ -33,74 +34,68 @@ public:
 private:
     void processWheelFrequencies(const std_msgs::msg::Float64MultiArray::SharedPtr msg)
     {
-        if (first_msg_) {
-            last_time_ = this->now();
-
-            auto data = msg->data;
-
-            double freq1 = data[0] * 2 * M_PI;
-            double freq2 = data[1] * 2 * M_PI;
-            double freq3 = data[2] * 2 * M_PI;
-            double freq4 = data[3] * 2 * M_PI;
-
-            last_vx_ = r * (freq1 + freq2 + freq3 + freq4) / 4.0;
-            last_vy_ = r * (-freq1 + freq2 + freq3 - freq4) / 4.0;
-            last_omega_ = r * (-freq1 + freq2 - freq3 + freq4) / (4.0 * (l_x + l_y));
-
-            first_msg_ = false;
-
+        // Check message data size
+        if (msg->data.size() < 4) {
+            RCLCPP_WARN(this->get_logger(), "Insufficient wheel frequency data.");
             return;
         }
 
-        updateOdometry();
+        if (first_msg_) {
+            last_time_ = this->now();
+            first_msg_ = false;
+            return;
+        }
 
         auto data = msg->data;
 
-        // Extract and calculate frequencies
-        double freq1 = data[2] * 2 * M_PI;
-        double freq2 = data[3] * 2 * M_PI;
-        double freq3 = data[1] * 2 * M_PI;
-        double freq4 = data[0] * 2 * M_PI;
+        // Extract wheel frequencies and convert to angular velocities
+        const double freq1 = data[0] * 2 * M_PI;
+        const double freq2 = data[1] * 2 * M_PI;
+        const double freq3 = data[2] * 2 * M_PI;
+        const double freq4 = data[3] * 2 * M_PI;
 
         // Calculate linear and angular velocities
-        last_vx_ = r * (freq1 + freq2 + freq3 + freq4) / 4.0;
-        last_vy_ = r * (-freq1 + freq2 + freq3 - freq4) / 4.0;
-        last_omega_ = r * (-freq1 + freq2 - freq3 + freq4) / (4.0 * (l_x + l_y));
+        last_vx_ = WHEEL_RADIUS * (freq1 + freq2 + freq3 + freq4) / 4.0;
+        last_vy_ = WHEEL_RADIUS * (-freq1 + freq2 + freq3 - freq4) / 4.0;
+        last_omega_ = WHEEL_RADIUS * (-freq1 + freq2 - freq3 + freq4) / 
+                      (4.0 * (BASE_LENGTH_X + BASE_LENGTH_Y));
+
+        updateOdometry();
     }
 
     void updateOdometry()
     {
-        auto current_time = this->now();
-        double dt = (current_time - last_time_).seconds();
+        const auto current_time = this->now();
+        const double dt = (current_time - last_time_).seconds();
 
-        // Update pose using velocity and time
-        double delta_x = (last_vx_ * cos(theta_) - last_vy_ * sin(theta_)) * dt;
-        double delta_y = (last_vx_ * sin(theta_) + last_vy_ * cos(theta_)) * dt;
-        double delta_theta = last_omega_ * dt;
+        // Update pose using velocities
+        const double delta_x = (last_vx_ * std::cos(theta_) - last_vy_ * std::sin(theta_)) * dt;
+        const double delta_y = (last_vx_ * std::sin(theta_) + last_vy_ * std::cos(theta_)) * dt;
+        const double delta_theta = last_omega_ * dt;
 
         x_ += delta_x;
         y_ += delta_y;
         theta_ += delta_theta;
-        theta_ = std::atan2(std::sin(theta_), std::cos(theta_));  // Normalize theta
+
+        // Normalize theta to [-pi, pi]
+        theta_ = std::atan2(std::sin(theta_), std::cos(theta_));
 
         publishOdometry(current_time);
         last_time_ = current_time;
     }
 
-    void publishOdometry(rclcpp::Time current_time)
+    void publishOdometry(const rclcpp::Time& current_time)
     {
-        // Create odometry message
+        // Populate Odometry message
         nav_msgs::msg::Odometry odom_msg;
         odom_msg.header.stamp = current_time;
         odom_msg.header.frame_id = "odom";
         odom_msg.child_frame_id = "base_footprint";
 
-        // Set the position
         odom_msg.pose.pose.position.x = x_;
         odom_msg.pose.pose.position.y = y_;
         odom_msg.pose.pose.position.z = 0.0;
 
-        // Set the orientation (quaternion from theta_)
         tf2::Quaternion q;
         q.setRPY(0, 0, theta_);
         odom_msg.pose.pose.orientation.x = q.x();
@@ -108,15 +103,13 @@ private:
         odom_msg.pose.pose.orientation.z = q.z();
         odom_msg.pose.pose.orientation.w = q.w();
 
-        // Set the velocities
         odom_msg.twist.twist.linear.x = last_vx_;
         odom_msg.twist.twist.linear.y = last_vy_;
         odom_msg.twist.twist.angular.z = last_omega_;
 
-        // Publish odometry
         odom_publisher_->publish(odom_msg);
 
-        // Publish the transform
+        // Publish Transform
         geometry_msgs::msg::TransformStamped transform;
         transform.header.stamp = current_time;
         transform.header.frame_id = "odom";
@@ -134,10 +127,10 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
-    double last_vx_, last_vy_, last_omega_;
-    double x_, y_, theta_; // Robot's pose
+    double x_, y_, theta_;   // Robot's pose
+    double last_vx_, last_vy_, last_omega_;  // Velocities
     bool first_msg_;
-    rclcpp::Time last_time_; // Last time stamp for odometry calculation
+    rclcpp::Time last_time_;  // Last timestamp for odometry update
 };
 
 int main(int argc, char **argv)
