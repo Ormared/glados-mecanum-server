@@ -127,6 +127,7 @@ def generate_launch_description():
         executable='odometry_node',
         name='odometry_publisher',
         parameters=[{'use_sim_time': use_sim_time}]
+    )
 
     # Robot Localization EKF node
     ekf_robot_localization = Node(
