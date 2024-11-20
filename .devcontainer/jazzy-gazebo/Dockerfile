@@ -2,8 +2,6 @@ FROM althack/ros2:jazzy-gazebo
 
 # Add user to video group to allow access to webcam
 # RUN sudo usermod --append --groups video $USERNAME
-# ** [Optional] Uncomment this section to install additional packages. **
-#
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
    && apt-get -y install --no-install-recommends \
