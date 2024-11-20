@@ -87,17 +87,16 @@ private:
         }
     }
 
-    void read_from_serial()
-    {
-        // if (serial_port_ < 0) return;
+    void read_from_serial() {
+        if (serial_port_ < 0) return;
 
-        // char buffer[39];
-        // ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
-        // if (bytes_read > 0) {
-        //     auto message = std_msgs::msg::String();
-        //     message.data = std::string(buffer, bytes_read);
-        //     publisher_->publish(message);
-        // }
+        uint8_t buffer[39]; // uint8_t buffer to match the custom message
+        ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
+        if (bytes_read > 0) {
+            auto message = glados_hardware::msg::Int8Array(); // Replace with your package name
+            message.data = std::vector<uint8_t>(buffer, buffer + bytes_read); // Populate uint8[] field
+            publisher_->publish(message);
+        }
         return;
     }
 

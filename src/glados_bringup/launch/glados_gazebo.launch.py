@@ -68,7 +68,8 @@ def generate_launch_description():
        package='rviz2',
        executable='rviz2',
        arguments=['-d', os.path.join(pkg_project_bringup, 'config', 'rviz.rviz')],
-       condition=IfCondition(LaunchConfiguration('rviz'))
+       condition=IfCondition(LaunchConfiguration('rviz')),
+       parameters=[{'use_sim_time': True}]
     )
 
     # Bridge ROS topics and Gazebo messages for establishing communication
@@ -78,6 +79,7 @@ def generate_launch_description():
         parameters=[{
             'config_file': os.path.join(pkg_project_bringup, 'config', 'glados_bridge.yaml'),
             'qos_overrides./tf_static.publisher.durability': 'transient_local',
+            'use_sim_time': True
         }],
         output='screen'
     )
@@ -86,28 +88,32 @@ def generate_launch_description():
     teleop = Node(
         package='glados_hardware',
         executable='teleop_to_serial_node',
-        name='teleop'
+        name='teleop',
+        parameters=[{'use_sim_time': True}]
     )
 
     # Serial gz adapter
     serial_gz_adapter = Node(
         package='glados_hardware',
         executable='serial_gz_adapter_node',
-        name='serial_gz_adapter'
+        name='serial_gz_adapter',
+        parameters=[{'use_sim_time': True}]
     )
 
     # Joint state publisher
     joint_state_publisher = Node(
         package='glados_application',
         executable='joint_state_publisher_node',
-        name='joint_state_publisher'
+        name='joint_state_publisher',
+        parameters=[{'use_sim_time': True}]
     )
 
     # Odometry publisher
     odometry_publisher = Node(
         package='glados_application',
         executable='odometry_node',
-        name='odometry_publisher'
+        name='odometry_publisher',
+        parameters=[{'use_sim_time': True}]
     )
 
     return LaunchDescription([

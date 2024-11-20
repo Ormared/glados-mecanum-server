@@ -18,9 +18,6 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_state_sub_;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
     rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr serial_read_pub_;
-
-    sensor_msgs::msg::JointState prev_joint_state_;
-    rclcpp::Time prev_time_;
 };
 
 #endif // SERIAL_GZ_ADAPTER_NODE_HPP
