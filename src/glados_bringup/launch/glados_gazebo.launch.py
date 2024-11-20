@@ -30,6 +30,8 @@ def generate_launch_description():
     # Configure ROS nodes for launch
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
     world = LaunchConfiguration('world', default='glados.sdf')
+    # world = LaunchConfiguration('world', default='warehouse.sdf')
+    # world = LaunchConfiguration('world', default='glados_obs.sdf')
 
     # Setup project paths
     pkg_project_bringup = get_package_share_directory('glados_bringup')

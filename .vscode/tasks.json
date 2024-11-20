@@ -62,7 +62,7 @@
             "label": "slam_toolbox",
             "detail": "Launch slam_toolbox with slam_params_file",
             "type": "shell",
-            "command": "ros2 launch slam_toolbox online_async_launch.py slam_toolbox_online_async.launch.py slam_params_file:=/src/glados_bringup/config/slam_toolbox_params.yaml",
+            "command": "ros2 launch slam_toolbox online_async_launch.py slam_params_file:=./src/glados_bringup/config/mapper_params_online_async.yaml ",
         },
         {
             "label": "map server",

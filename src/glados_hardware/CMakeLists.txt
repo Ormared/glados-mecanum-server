@@ -53,6 +53,8 @@ endif()
   install(TARGETS digital_voltmeter_node
   DESTINATION lib/${PROJECT_NAME})
 
+  ament_target_dependencies(digital_voltmeter_node sensor_msgs)
+
 # Serial gazebo adapter node
   include_directories(
     include/${PROJECT_NAME}
