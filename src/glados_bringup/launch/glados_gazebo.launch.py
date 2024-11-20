@@ -28,27 +28,40 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     # Configure ROS nodes for launch
+    use_sim_time = LaunchConfiguration('use_sim_time', default='True')
+    world = LaunchConfiguration('world', default='glados.sdf')
 
     # Setup project paths
     pkg_project_bringup = get_package_share_directory('glados_bringup')
     pkg_project_gazebo = get_package_share_directory('glados_gazebo')
     pkg_project_description = get_package_share_directory('glados_description')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
+    ekf_config_path = PathJoinSubstitution([pkg_project_bringup, 'config', 'ekf.yaml'])
 
     # Load the SDF file from "description" package
     sdf_file  =  os.path.join(pkg_project_description, 'models', 'glados', 'model.sdf')
     with open(sdf_file, 'r') as infp:
         robot_desc = infp.read()
 
+    declare_use_sim_time = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='true',
+        description='Use simulation (Gazebo) clock if true'
+    )
+
     # Setup to launch the simulator and Gazebo world
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
-        launch_arguments={'gz_args': PathJoinSubstitution([
-            pkg_project_gazebo,
-            'worlds',
-            'glados.sdf'
-        ])}.items(),
+        launch_arguments={
+            'gz_args': PathJoinSubstitution([
+                pkg_project_gazebo,
+                'worlds',
+                world
+            ]),
+            'use_sim_time': use_sim_time,
+            # 'publish_joints': 'false',
+        }.items(),
     )
 
     # Takes the description and joint angles as inputs and publishes the 3D poses of the robot links
@@ -58,7 +71,7 @@ def generate_launch_description():
         name='robot_state_publisher',
         output='both',
         parameters=[
-            {'use_sim_time': True},
+            {'use_sim_time': use_sim_time},
             {'robot_description': robot_desc},
         ]
     )
@@ -69,7 +82,7 @@ def generate_launch_description():
        executable='rviz2',
        arguments=['-d', os.path.join(pkg_project_bringup, 'config', 'rviz.rviz')],
        condition=IfCondition(LaunchConfiguration('rviz')),
-       parameters=[{'use_sim_time': True}]
+       parameters=[{'use_sim_time': use_sim_time}]
     )
 
     # Bridge ROS topics and Gazebo messages for establishing communication
@@ -79,7 +92,7 @@ def generate_launch_description():
         parameters=[{
             'config_file': os.path.join(pkg_project_bringup, 'config', 'glados_bridge.yaml'),
             'qos_overrides./tf_static.publisher.durability': 'transient_local',
-            'use_sim_time': True
+            'use_sim_time': use_sim_time
         }],
         output='screen'
     )
@@ -89,7 +102,7 @@ def generate_launch_description():
         package='glados_hardware',
         executable='teleop_to_serial_node',
         name='teleop',
-        parameters=[{'use_sim_time': True}]
+        parameters=[{'use_sim_time': use_sim_time}]
     )
 
     # Serial gz adapter
@@ -97,7 +110,7 @@ def generate_launch_description():
         package='glados_hardware',
         executable='serial_gz_adapter_node',
         name='serial_gz_adapter',
-        parameters=[{'use_sim_time': True}]
+        parameters=[{'use_sim_time': use_sim_time}]
     )
 
     # Joint state publisher
@@ -105,7 +118,7 @@ def generate_launch_description():
         package='glados_application',
         executable='joint_state_publisher_node',
         name='joint_state_publisher',
-        parameters=[{'use_sim_time': True}]
+        parameters=[{'use_sim_time': use_sim_time}]
     )
 
     # Odometry publisher
@@ -113,18 +126,32 @@ def generate_launch_description():
         package='glados_application',
         executable='odometry_node',
         name='odometry_publisher',
-        parameters=[{'use_sim_time': True}]
+        parameters=[{'use_sim_time': use_sim_time}]
+
+    # Robot Localization EKF node
+    ekf_robot_localization = Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            output='screen',
+            parameters=[
+                {'use_sim_time': use_sim_time}, 
+                ekf_config_path
+            ],
+            # remappings=[("odometry/filtered", "odom")]
     )
 
     return LaunchDescription([
         gz_sim,
-        DeclareLaunchArgument('rviz', default_value='true',
-                              description='Open RViz.'),
+        declare_use_sim_time,
         bridge,
         robot_state_publisher,
         teleop,
         serial_gz_adapter,
         joint_state_publisher,
         odometry_publisher,
+        ekf_robot_localization,
+        DeclareLaunchArgument('rviz', default_value='true',
+                              description='Open RViz.'),
         rviz
     ])

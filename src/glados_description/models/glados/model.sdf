@@ -1,6 +1,16 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
     <model name='glados' xmlns:gz="http://gazebosim.org/schema">
+      
+      <!-- <link name="base_link">
+      </link>
+
+      <joint name="base_footprint_joint" type="fixed">
+        <parent>base_link</parent>
+        <child>base_footprint</child>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </joint>
+      -->
       <link name='base_footprint'>
         <pose>0 0 0 0 0 0</pose>
       </link>
@@ -300,7 +310,8 @@
         </visual>
         <sensor name='gpu_lidar' type='gpu_lidar'>
           <pose>0 0 0 0 0 0</pose>
-          <topic>lidar</topic>
+          <!-- <topic>lidar</topic> -->
+          <topic>scan</topic>
           <gz_frame_id>lidar_link</gz_frame_id>
           <update_rate>10</update_rate>
           <lidar>

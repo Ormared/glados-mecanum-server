@@ -10,6 +10,7 @@
 	"runArgs": [
 		"--privileged",
 		// "--network=host",
+		// "--pid=host" // DDS discovery with host, without --network=host
 		"--ipc=host",
 		// allows to uses ptrace-based debugging tools
 		"--cap-add=SYS_PTRACE",
@@ -23,6 +24,8 @@
 		"--gpus=all",
 		// uncomment to use intel iGPU
 		"--volume=/dev/dri:/dev/dri",
+		"--volume=/dev/ttyUSB0:/dev/ttyUSB0",
+		// "--device=/dev/ttyUSB0:/dev/USB0",
 		// "--device=/dev/dri/card0:/dev/dri/card0",
   		// "--device=/dev/dri/card1:/dev/dri/card1",
   		// "--device=/dev/dri/renderD128:/dev/dri/renderD128",

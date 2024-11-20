@@ -2,7 +2,7 @@
 #include <cstring>
 
 #include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/float32.hpp>
+#include <sensor_msgs/msg/battery_state.hpp>
 #include <string>
 #include <memory>
 #include <chrono>
@@ -10,10 +10,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-class VoltagePublisher : public rclcpp::Node {
+class BatteryStatePublisher : public rclcpp::Node {
 public:
-    explicit VoltagePublisher(const std::string& serial_port = "/dev/ttyUSB0");
-    ~VoltagePublisher();
+    explicit BatteryStatePublisher(const std::string& serial_port = "/dev/ttyUSB0");
+    ~BatteryStatePublisher();
 
 private:
     void timer_callback();
@@ -21,7 +21,7 @@ private:
     float read_voltage();
     void cleanup_serial();
 
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
     
     int serial_fd_;
@@ -31,12 +31,12 @@ private:
     bool is_serial_connected_ = false;
 };
 
-VoltagePublisher::VoltagePublisher(const std::string& serial_port)
-    : Node("voltage_publisher"), serial_port_(serial_port) {
+BatteryStatePublisher::BatteryStatePublisher(const std::string& serial_port)
+    : Node("battery_state_publisher"), serial_port_(serial_port) {
     
-    // Create publisher
-    publisher_ = this->create_publisher<std_msgs::msg::Float32>(
-        "voltage_measurements", 10);
+    // Create publisher for BatteryState
+    publisher_ = this->create_publisher<sensor_msgs::msg::BatteryState>(
+        "battery_state", 10);
 
     // Setup serial connection
     if (setup_serial()) {
@@ -46,17 +46,17 @@ VoltagePublisher::VoltagePublisher(const std::string& serial_port)
         // Create timer for reading and publishing data (10Hz)
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(100),
-            std::bind(&VoltagePublisher::timer_callback, this));
+            std::bind(&BatteryStatePublisher::timer_callback, this));
     } else {
         RCLCPP_ERROR(this->get_logger(), "Failed to establish serial connection");
     }
 }
 
-VoltagePublisher::~VoltagePublisher() {
+BatteryStatePublisher::~BatteryStatePublisher() {
     cleanup_serial();
 }
 
-bool VoltagePublisher::setup_serial() {
+bool BatteryStatePublisher::setup_serial() {
     serial_fd_ = open(serial_port_.c_str(), O_RDWR);
     if (serial_fd_ < 0) {
         RCLCPP_ERROR(this->get_logger(), "Error opening serial port: %s", 
@@ -75,23 +75,21 @@ bool VoltagePublisher::setup_serial() {
     cfsetospeed(&tty, BAUD_RATE);
     cfsetispeed(&tty, BAUD_RATE);
     
-    tty.c_cflag |= (CLOCAL | CREAD);    // Enable receiver, ignore modem controls
+    tty.c_cflag |= (CLOCAL | CREAD);
     tty.c_cflag &= ~CSIZE;
-    tty.c_cflag |= CS8;                 // 8-bit characters
-    tty.c_cflag &= ~PARENB;             // No parity bit
-    tty.c_cflag &= ~CSTOPB;             // One stop bit
-    tty.c_cflag &= ~CRTSCTS;            // No hardware flowcontrol
+    tty.c_cflag |= CS8;
+    tty.c_cflag &= ~PARENB;
+    tty.c_cflag &= ~CSTOPB;
+    tty.c_cflag &= ~CRTSCTS;
 
-    // Configure for raw input
-    tty.c_lflag &= ~ICANON;             // Disable canonical mode
-    tty.c_lflag &= ~ECHO;               // Disable echo
-    tty.c_lflag &= ~ECHOE;              // Disable erasure
-    tty.c_lflag &= ~ECHONL;             // Disable new-line echo
-    tty.c_lflag &= ~ISIG;               // Disable interpretation of INTR, QUIT and SUSP
+    tty.c_lflag &= ~ICANON;
+    tty.c_lflag &= ~ECHO;
+    tty.c_lflag &= ~ECHOE;
+    tty.c_lflag &= ~ECHONL;
+    tty.c_lflag &= ~ISIG;
 
-    // Configure for raw output
-    tty.c_oflag &= ~OPOST;              // Prevent special interpretation of output bytes
-    tty.c_oflag &= ~ONLCR;              // Prevent conversion of newline to carriage return/line feed
+    tty.c_oflag &= ~OPOST;
+    tty.c_oflag &= ~ONLCR;
 
     if (tcsetattr(serial_fd_, TCSANOW, &tty) != 0) {
         RCLCPP_ERROR(this->get_logger(), "Error setting serial port attributes: %s", 
@@ -103,47 +101,66 @@ bool VoltagePublisher::setup_serial() {
     return true;
 }
 
-float VoltagePublisher::read_voltage() {
-    char buffer[BUFFER_SIZE];
-    int n = read(serial_fd_, buffer, sizeof(buffer) - 1);
+float BatteryStatePublisher::read_voltage() {
+    float voltage;
+    int n = read(serial_fd_, &voltage, sizeof(float));
     
-    if (n > 0) {
-        buffer[n] = '\0';
-        try {
-            return std::stof(buffer);
-        } catch (const std::exception& e) {
-            RCLCPP_WARN(this->get_logger(), "Failed to convert serial data to float: %s", 
-                e.what());
-        }
+    if (n == sizeof(float)) {
+        return voltage;
     }
-    return -1.0f;  // Return invalid value if read fails
+    
+    RCLCPP_WARN(this->get_logger(), "Failed to read voltage");
+    return -1.0f;
 }
 
-void VoltagePublisher::timer_callback() {
+void BatteryStatePublisher::timer_callback() {
     if (!is_serial_connected_) {
         return;
     }
 
     float voltage = read_voltage();
     if (voltage >= 0.0f) {  // Valid reading
-        auto message = std_msgs::msg::Float32();
-        message.data = voltage;
-        publisher_->publish(message);
-        RCLCPP_DEBUG(this->get_logger(), "Published voltage: %.2fV", voltage);
+        auto battery_msg = sensor_msgs::msg::BatteryState();
+        
+        // Mandatory fields
+        battery_msg.voltage = voltage;
+        
+        // Optional fields set to NaN
+        battery_msg.current = NAN;
+        battery_msg.temperature = NAN;
+        
+        // Capacity-related fields
+        battery_msg.charge = NAN;
+        battery_msg.capacity = NAN;
+        battery_msg.design_capacity = NAN;
+        battery_msg.percentage = NAN;
+        
+        // Status and health fields
+        battery_msg.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_UNKNOWN;
+        battery_msg.power_supply_health = sensor_msgs::msg::BatteryState::POWER_SUPPLY_HEALTH_UNKNOWN;
+        battery_msg.power_supply_technology = sensor_msgs::msg::BatteryState::POWER_SUPPLY_TECHNOLOGY_UNKNOWN;
+        
+        // Additional fields
+        battery_msg.present = true;
+        
+        // Publish the message
+        publisher_->publish(battery_msg);
+        
+        RCLCPP_DEBUG(this->get_logger(), 
+            "Published Battery State: V=%.2f", voltage);
     }
 }
 
-void VoltagePublisher::cleanup_serial() {
+void BatteryStatePublisher::cleanup_serial() {
     if (is_serial_connected_) {
         close(serial_fd_);
         is_serial_connected_ = false;
     }
 }
 
-// Main function
 int main(int argc, char* argv[]) {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<VoltagePublisher>();
+    auto node = std::make_shared<BatteryStatePublisher>();
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
