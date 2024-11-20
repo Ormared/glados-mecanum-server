@@ -59,8 +59,8 @@ void SerialGzAdapterNode::jointStateCallback(const sensor_msgs::msg::JointState:
 
     std::vector<int16_t> wheel_velocities; // in rev/s
     for (size_t i = 1; i <= 4; ++i) {
-        double velocity = (msg->position[i] - prev_joint_state_.position[i]) / (dt * 2 * M_PI);
-        wheel_velocities.push_back(velocity * 10000);
+        // double velocity = (msg->position[i] - prev_joint_state_.position[i]) / (dt * 2 * M_PI);
+        wheel_velocities.push_back(msg->velocity[i] / (2 * M_PI) * 10000);
     }
 
     // char data[39];
@@ -89,8 +89,6 @@ void SerialGzAdapterNode::jointStateCallback(const sensor_msgs::msg::JointState:
         static_cast<uint8_t>(wheel_velocities[0] & 0xFF),
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
-
-    RCLCPP_INFO(this->get_logger(), "Sent: %d %d %d %d", wheel_velocities[0], wheel_velocities[1], wheel_velocities[2], wheel_velocities[3]);
 
     serial_read_pub_->publish(serial_msg);
 

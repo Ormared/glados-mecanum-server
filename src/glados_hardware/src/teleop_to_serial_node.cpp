@@ -143,12 +143,18 @@ private:
         auto data = msg->data;
 
         // Extract and calculate frequencies
-        double freq3 = (static_cast<int16_t>(data[13]) * 256 + static_cast<int16_t>(data[14])) / 10000.;
-        double freq4 = (static_cast<int16_t>(data[15]) * 256 + static_cast<int16_t>(data[16])) / 10000.;
-        double freq2 = (static_cast<int16_t>(data[17]) * 256 + static_cast<int16_t>(data[18])) / 10000.;
-        double freq1 = (static_cast<int16_t>(data[19]) * 256 + static_cast<int16_t>(data[20])) / 10000.;
-
-        RCLCPP_INFO(this->get_logger(), "Received: %f %f %f %f", freq1, freq2, freq3, freq4);
+        double freq3 = static_cast<int16_t>(
+            (static_cast<int16_t>(msg->data[13]) << 8) & 0xFFFF |
+            (static_cast<int16_t>(msg->data[14]) & 0xFF)) / 10000.;
+        double freq4 = static_cast<int16_t>(
+            (static_cast<int16_t>(msg->data[15]) << 8) & 0xFFFF |
+            (static_cast<int16_t>(msg->data[16]) & 0xFF)) / 10000.;
+        double freq2 = static_cast<int16_t>(
+            (static_cast<int16_t>(msg->data[17]) << 8) & 0xFFFF |
+            (static_cast<int16_t>(msg->data[18]) & 0xFF)) / 10000.;    
+        double freq1 = static_cast<int16_t>(
+            (static_cast<int16_t>(msg->data[19]) << 8) & 0xFFFF |
+            (static_cast<int16_t>(msg->data[20]) & 0xFF)) / 10000.;   
 
         std::vector<double> temp = {freq1, freq2, freq3, freq4};
 
