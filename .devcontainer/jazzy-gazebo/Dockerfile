@@ -23,11 +23,17 @@ RUN apt-get update \
    ros-jazzy-twist-mux \
    ros-jazzy-robot-localization \
    ros-jazzy-slam-toolbox \
-   # Clean up
+   ros-jazzy-cv-bridge \
+   ros-jazzy-image-transport 
+
+RUN apt-get -y install --no-install-recommends \
+   libopencv-dev \
+   python3-opencv \
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
+
 
 
 # RUN git clone https://github.com/Slamtec/rplidar_sdk \
@@ -43,6 +49,7 @@ ENV GZ_VERSION=harmonic
 # Set up auto-source of workspace for ros user
 ARG WORKSPACE
 RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/install/setup.bash; fi" >> /home/ros/.bashrc
+# RUN rosdep install -i --from-path src --rosdistro $ROS_DISTRO --skip-keys=librealsense2 -y
 
 # sudo apt install ros-jazzy-navigation2
 # sudo apt install ros-jazzy-nav2-bringup

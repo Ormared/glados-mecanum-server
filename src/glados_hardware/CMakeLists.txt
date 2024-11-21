@@ -11,6 +11,9 @@ endif()
   find_package(std_msgs REQUIRED)
   find_package(geometry_msgs REQUIRED)
   find_package(sensor_msgs REQUIRED)
+  find_package(cv_bridge REQUIRED)
+  # find_package(OpenCV REQUIRED)
+  find_package(librealsense2 4.56.1 REQUIRED)
 
 # Custom msg
   find_package(rosidl_default_generators REQUIRED)
@@ -69,6 +72,27 @@ endif()
   install(TARGETS serial_gz_adapter_node
   DESTINATION lib/${PROJECT_NAME})
 
+# Depth camera node
+  add_executable(depth_camera_node src/depth_camera_node.cpp)
+
+  # Link libraries
+  ament_target_dependencies(depth_camera_node
+    rclcpp
+    sensor_msgs
+    cv_bridge
+    # OpenCV
+    librealsense2
+  )
+
+  # target_link_libraries(depth_camera_node
+  #   realsense2
+  # )
+
+  # Install
+  install(TARGETS
+    depth_camera_node
+    DESTINATION lib/${PROJECT_NAME}
+  )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
