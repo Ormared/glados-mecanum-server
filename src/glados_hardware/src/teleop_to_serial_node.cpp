@@ -60,21 +60,41 @@ static uint16_t crc16_modbus(const std::vector<uint8_t>& buf) {
     return crc;
 }
 
+double getThresholdedValue(double value, double threshold)
+{
+    if (value > threshold)
+    {
+        return threshold;
+    }
+    else if (value < -threshold)
+    {
+        return -(threshold+1);
+    }
+    return value;
+}
+
 // Convert Twist (velocity) to frequencies for the motors
 std::vector<int16_t> toFreqs(float v_x, float v_y, float omega)
 {
-    const int MAX_FREQ = 10000;
+    const int STM_CONSTANT = 10000;
     const float r = 0.1;  // Wheel radius
     const float l_x = 0.1575;  // Distance from the center of the robot to the wheels along the x-axis
     const float l_y = 0.215;   // Distance from the center of the robot to the wheels along the y-axis
+    const int MAX_FREQ = 32767;
 
     std::vector<int16_t> freqs(4);
 
+    // printf("Received v_x_y_o: %f %f %f", v_x, v_y, omega);
+    // printf("Received freq: %f", (MAX_FREQ * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI)));
     // Calculate the frequencies for each wheel (simplified kinematics)
-    freqs[0] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI));
-    freqs[1] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI));
-    freqs[2] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI));
-    freqs[3] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI));
+    // freqs[0] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI));
+    // freqs[1] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI));
+    // freqs[2] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI));
+    // freqs[3] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI));
+    freqs[0] = static_cast<int16_t>(getThresholdedValue(STM_CONSTANT * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI), MAX_FREQ));
+    freqs[1] = static_cast<int16_t>(getThresholdedValue(STM_CONSTANT * (1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI), MAX_FREQ));
+    freqs[2] = static_cast<int16_t>(getThresholdedValue(STM_CONSTANT * (1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI), MAX_FREQ));
+    freqs[3] = static_cast<int16_t>(getThresholdedValue(STM_CONSTANT * (1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI), MAX_FREQ));
 
     return freqs;
 }

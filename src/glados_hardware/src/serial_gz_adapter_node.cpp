@@ -27,19 +27,20 @@ void SerialGzAdapterNode::serialWriteCallback(const glados_hardware::msg::Int8Ar
     // Extract frequencies from specific byte pairs
     double freq3 = static_cast<int16_t>(
         ((static_cast<int16_t>(msg->data[7]) << 8) & 0xFFFF) |
-        (static_cast<int16_t>(msg->data[8]) & 0xFF)) / 10000.;
+        (static_cast<int16_t>(msg->data[8]) & 0xFF)) / 10000. * 2 * M_PI;
     double freq4 = static_cast<int16_t>(
         ((static_cast<int16_t>(msg->data[9]) << 8) & 0xFFFF) |
-        (static_cast<int16_t>(msg->data[10]) & 0xFF)) / 10000.;
+        (static_cast<int16_t>(msg->data[10]) & 0xFF)) / 10000. * 2 * M_PI;
     double freq2 = static_cast<int16_t>(
         ((static_cast<int16_t>(msg->data[11]) << 8) & 0xFFFF) |
-        (static_cast<int16_t>(msg->data[12]) & 0xFF)) / 10000.;    
+        (static_cast<int16_t>(msg->data[12]) & 0xFF)) / 10000. * 2 * M_PI;    
     double freq1 = static_cast<int16_t>(
         ((static_cast<int16_t>(msg->data[13]) << 8) & 0xFFFF) |
-        (static_cast<int16_t>(msg->data[14]) & 0xFF)) / 10000.;    
+        (static_cast<int16_t>(msg->data[14]) & 0xFF)) / 10000. * 2 * M_PI;    
             
     // Mecanum wheel kinematics conversion
     geometry_msgs::msg::Twist twist;
+    RCLCPP_INFO(this->get_logger(), "Sending: %f %f %f %f", freq1, freq2, freq3, freq4);
     twist.linear.x = r * (freq1 + freq2 + freq3 + freq4) / 4.0;
     twist.linear.y = r * (-freq1 + freq2 + freq3 - freq4) / 4.0;
     twist.angular.z = r * (-freq1 + freq2 - freq3 + freq4) / (4.0 * (lx + ly));
