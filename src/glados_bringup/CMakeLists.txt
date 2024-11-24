@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 project(glados_bringup)
 
 find_package(ament_cmake REQUIRED)
+find_package(foxglove_bridge REQUIRED)
 find_package(glados_description REQUIRED)
 find_package(glados_gazebo REQUIRED)
 find_package(glados_hardware REQUIRED)

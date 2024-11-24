@@ -23,6 +23,9 @@ RUN apt-get update \
    ros-jazzy-twist-mux \
    ros-jazzy-robot-localization \
    ros-jazzy-slam-toolbox \
+   ros-jazzy-foxglove-bridge \
+   net-tools \
+   ufw \
    # Clean up
    && apt-get autoremove -y \
    && apt-get clean -y \

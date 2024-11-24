@@ -67,6 +67,7 @@ private:
     {
         const auto current_time = this->now();
         const double dt = (current_time - last_time_).seconds();
+        RCLCPP_INFO(this->get_logger(), "dt: %f", dt);
 
         // Update pose using velocities
         const double delta_x = (last_vx_ * std::cos(theta_) - last_vy_ * std::sin(theta_)) * dt;

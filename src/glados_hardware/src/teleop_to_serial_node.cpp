@@ -128,7 +128,7 @@ private:
         auto freqs = toFreqs(msg->linear.x, msg->linear.y, msg->angular.z);
 	// auto freqs = std::vector<uint16_t>( {5000, 5000, 0, 0} );
 
-        RCLCPP_INFO(this->get_logger(), "Sending: %d %d %d %d", freqs[0], freqs[1], freqs[2], freqs[3]);
+        // RCLCPP_INFO(this->get_logger(), "Sending_new: %d %d %d %d", freqs[0], freqs[1], freqs[2], freqs[3]);
 
         // Prepare the serial data message
         std::vector<uint8_t> serial_data = {
@@ -160,6 +160,7 @@ private:
             return;
         }
 
+        RCLCPP_INFO(this->get_logger(), "Serial callback:");
         auto data = msg->data;
 
         // Extract and calculate frequencies

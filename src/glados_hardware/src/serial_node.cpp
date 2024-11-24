@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <vector>
+#include <chrono>
 
 class SerialNode : public rclcpp::Node
 {
@@ -26,14 +27,14 @@ public:
 
         // Subscribe to a topic
         subscription_ = this->create_subscription<glados_hardware::msg::Int8Array>(
-            "serial_write", 10, std::bind(&SerialNode::write_to_serial, this, std::placeholders::_1));
+            "serial_write", 10, std::bind(&SerialNode::save_msg, this, std::placeholders::_1));
 
         // Publish data from the serial port
         publisher_ = this->create_publisher<glados_hardware::msg::Int8Array>("serial_read", 10);
 
         // Timer to periodically check the serial port for data
         timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100), std::bind(&SerialNode::read_from_serial, this));
+            std::chrono::milliseconds(20), std::bind(&SerialNode::send_to_serial, this));
     }
 
     ~SerialNode()
@@ -77,25 +78,42 @@ private:
         return fd;
     }
 
-    void write_to_serial(const glados_hardware::msg::Int8Array::SharedPtr msg)
+    void save_msg(const glados_hardware::msg::Int8Array::SharedPtr msg)
     {
-        if (serial_port_ < 0) return;
+        last_time_ = std::chrono::high_resolution_clock::now();
 
-        ssize_t bytes_written = write(serial_port_, msg->data.data(), msg->data.size());
-        if (bytes_written < 0) {
-            RCLCPP_ERROR(this->get_logger(), "Error writing to serial port");
-        }
+        message_ = msg;
     }
 
-    void read_from_serial() {
+    void send_to_serial() {
         if (serial_port_ < 0) return;
+        if (!message_)return;
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - last_time_).count() > 100) {
+            RCLCPP_WARN(this->get_logger(), "Message timeout");
+            message_->data.data()[7] = 0;
+            message_->data.data()[8] = 0;
+            message_->data.data()[9] = 0;
+            message_->data.data()[10] = 0;
+            message_->data.data()[11] = 0;
+            message_->data.data()[12] = 0;
+            message_->data.data()[13] = 0;
+            // return;
+        }
 
+        ssize_t bytes_written = write(serial_port_, message_->data.data(), message_->data.size());
+        if (bytes_written < message_->data.size()) {
+            RCLCPP_ERROR(this->get_logger(), "Error writing to serial port");
+            return;
+        }
         uint8_t buffer[39]; // uint8_t buffer to match the custom message
         ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
+        RCLCPP_INFO(this->get_logger(), "Bytes read: %d", bytes_read);
+
         if (bytes_read > 0) {
             auto message = glados_hardware::msg::Int8Array(); // Replace with your package name
             message.data = std::vector<uint8_t>(buffer, buffer + bytes_read); // Populate uint8[] field
             publisher_->publish(message);
+            // message_.reset();
         }
         return;
     }
@@ -107,6 +125,9 @@ private:
     rclcpp::Subscription<glados_hardware::msg::Int8Array>::SharedPtr subscription_;
     rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
+
+    glados_hardware::msg::Int8Array::SharedPtr message_;
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_time_ = std::chrono::high_resolution_clock::now();
 };
 
 int main(int argc, char *argv[])
