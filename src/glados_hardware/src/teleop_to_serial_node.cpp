@@ -1,9 +1,14 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 #include "glados_hardware/msg/int8_array.hpp"  // Custom message for serial communication
 #include <cmath>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <nav_msgs/msg/odometry.hpp>
+
 
 constexpr uint32_t CRC_POLYNOMIAL = 0x18005;  // Polynomial for CRC calculation
 constexpr uint32_t CRC_INITIAL = 0xFFFF;     // Initial value for CRC
@@ -102,7 +107,7 @@ std::vector<int16_t> toFreqs(float v_x, float v_y, float omega)
 class TeleopToSerialNode : public rclcpp::Node
 {
 public:
-    TeleopToSerialNode() : Node("teleop_to_serial_node")
+    TeleopToSerialNode() : Node("teleop_to_serial_node"), x_(0.0), y_(0.0), theta_(0.0), last_vx_(0.0), last_vy_(0.0), last_omega_(0.0), first_msg_(true)
     {
         // Subscription to Twist message (from teleop-twist-joy)
         twist_subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
@@ -115,6 +120,10 @@ public:
             "serial_read", 10, std::bind(&TeleopToSerialNode::serial_callback, this, std::placeholders::_1));
 
         frequency_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("wheel_frequencies", 10);
+
+        tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+
+        odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
     }
 
 private:
@@ -128,7 +137,7 @@ private:
         auto freqs = toFreqs(msg->linear.x, msg->linear.y, msg->angular.z);
 	// auto freqs = std::vector<uint16_t>( {5000, 5000, 0, 0} );
 
-        RCLCPP_INFO(this->get_logger(), "Sending: %d %d %d %d", freqs[0], freqs[1], freqs[2], freqs[3]);
+        // RCLCPP_INFO(this->get_logger(), "Sending_new: %d %d %d %d", freqs[0], freqs[1], freqs[2], freqs[3]);
 
         // Prepare the serial data message
         std::vector<uint8_t> serial_data = {
@@ -154,12 +163,23 @@ private:
 
     void serial_callback(const glados_hardware::msg::Int8Array::SharedPtr msg)
     {
+        if (first_msg_) {
+            last_time_ = this->now();
+            first_msg_ = false;
+            return;
+        }
+
+        const auto current_time = this->now();
+        const double dt = (current_time - last_time_).seconds();
+        last_time_ = current_time;
+
         if (msg->data.size() != 39)
         {
             RCLCPP_WARN(this->get_logger(), "Invalid message length: %zu", msg->data.size());
             return;
         }
 
+        RCLCPP_INFO(this->get_logger(), "Serial callback:");
         auto data = msg->data;
 
         // Extract and calculate frequencies
@@ -182,8 +202,78 @@ private:
         frequency_msg.data = temp;
 
         frequency_publisher_->publish(frequency_msg);
+
+        double WHEEL_RADIUS = 0.1;   // Wheel radius in meters
+        double BASE_LENGTH_X = 0.1575;  // Half distance between wheels along x-axis
+        double BASE_LENGTH_Y = 0.215;   
+
+        last_vx_ = WHEEL_RADIUS * (freq1 + freq2 + freq3 + freq4) / 4.0;
+        last_vy_ = WHEEL_RADIUS * (-freq1 + freq2 + freq3 - freq4) / 4.0;
+        last_omega_ = WHEEL_RADIUS * (-freq1 + freq2 - freq3 + freq4) / 
+                      (4.0 * (BASE_LENGTH_X + BASE_LENGTH_Y));
+
+        // Update pose using velocities
+        const double delta_x = (last_vx_ * std::cos(theta_) - last_vy_ * std::sin(theta_)) * dt;
+        const double delta_y = (last_vx_ * std::sin(theta_) + last_vy_ * std::cos(theta_)) * dt;
+        const double delta_theta = last_omega_ * dt;
+
+        x_ += delta_x;
+        y_ += delta_y;
+        theta_ += delta_theta;
+
+        // Normalize theta to [-pi, pi]
+        theta_ = std::atan2(std::sin(theta_), std::cos(theta_));
+
+        geometry_msgs::msg::TransformStamped transform;
+        transform.header.stamp = current_time;
+        transform.header.frame_id = "odom";
+        transform.child_frame_id = "base_footprint";
+
+        transform.transform.translation.x = x_;
+        transform.transform.translation.y = y_;
+        transform.transform.translation.z = 0.0;
+
+        tf2::Quaternion q;
+        q.setRPY(0, 0, theta_);
+        transform.transform.rotation.x = q.x();
+        transform.transform.rotation.y = q.y();
+        transform.transform.rotation.z = q.z();
+        transform.transform.rotation.w = q.w();
+
+        tf_broadcaster_->sendTransform(transform);
+
+        nav_msgs::msg::Odometry odom_msg;
+        odom_msg.header.stamp = current_time;
+        odom_msg.header.frame_id = "odom";
+        odom_msg.child_frame_id = "base_footprint";
+
+        odom_msg.pose.pose.position.x = x_;
+        odom_msg.pose.pose.position.y = y_;
+        odom_msg.pose.pose.position.z = 0.0;
+
+        // tf2::Quaternion q;
+        // q.setRPY(0, 0, theta_);
+        odom_msg.pose.pose.orientation.x = q.x();
+        odom_msg.pose.pose.orientation.y = q.y();
+        odom_msg.pose.pose.orientation.z = q.z();
+        odom_msg.pose.pose.orientation.w = q.w();
+
+        odom_msg.twist.twist.linear.x = last_vx_;
+        odom_msg.twist.twist.linear.y = last_vy_;
+        odom_msg.twist.twist.angular.z = last_omega_;
+
+        odom_publisher_->publish(odom_msg);
+
+
     }
 
+    double x_, y_, theta_;   // Robot's pose
+    double last_vx_, last_vy_, last_omega_;  // Velocities
+    bool first_msg_;
+    rclcpp::Time last_time_; 
+
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr twist_subscription_;
     rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr serial_publisher_;
     rclcpp::Subscription<glados_hardware::msg::Int8Array>::SharedPtr serial_subscription_;
