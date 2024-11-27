@@ -16,6 +16,7 @@
   <depend>glados_description</depend>
   <depend>glados_gazebo</depend>
 
+  <exec_depend>foxglove_bridge</exec_depend>
   <exec_depend>glados_hardware</exec_depend>
   <exec_depend>glados_application</exec_depend>
   <exec_depend>robot_localization</exec_depend>

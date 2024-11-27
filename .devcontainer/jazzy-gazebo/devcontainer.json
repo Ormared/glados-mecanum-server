@@ -12,6 +12,7 @@
 		// "--network=host",
 		// "--pid=host" // DDS discovery with host, without --network=host
 		"--ipc=host",
+		"--network=glados-overlay",
 		// allows to uses ptrace-based debugging tools
 		"--cap-add=SYS_PTRACE",
 		"--security-opt=seccomp:unconfined",

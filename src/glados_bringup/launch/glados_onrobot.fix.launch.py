@@ -10,7 +10,7 @@ def generate_launch_description():
     pkg_project_description = get_package_share_directory('glados_description')
 
     # Load the SDF file from "description" package
-    sdf_file = os.path.join(pkg_project_description, 'models', 'glados', 'model.sdf')
+    sdf_file = os.path.join(pkg_project_description, 'models', 'glados', 'car.urdf')
     with open(sdf_file, 'r') as infp:
         robot_desc = infp.read()
 
@@ -21,16 +21,10 @@ def generate_launch_description():
     #     name='robot_state_publisher',
     #     output='both',
     #     parameters=[
-    #         {'use_sim_time': False},
+    #         {'use_sim_time': True},
     #         {'robot_description': robot_desc},
     #     ]
     # )
-
-    foxglove_bridge = Node(
-        package='foxglove_bridge',
-        executable='foxglove_bridge',
-        name='foxglove_bridge',
-    )
 
     return LaunchDescription([
         Node(
@@ -54,6 +48,13 @@ def generate_launch_description():
             executable="odometry_node",
             name="odometry"
         ),
-        # foxglove_bridge,
+        Node(
+            package="foxglove_bridge",
+            executable="foxglove_bridge",
+            name="foxglove_bridge",
+            parameters=[
+                {'robot_description': robot_desc},
+            ]
+        ),
         # robot_state_publisher
     ])
