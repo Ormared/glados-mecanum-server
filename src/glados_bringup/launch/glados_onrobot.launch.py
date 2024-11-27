@@ -42,7 +42,8 @@ def generate_launch_description():
         Node(
             package="glados_hardware",
             executable="teleop_to_serial_node",
-            name="teleop_to_serial"
+            name="teleop_to_serial",
+            parameters=["src/glados_hardware/config/teleop_params.yaml"]
         ),
         Node(
             package="glados_application",

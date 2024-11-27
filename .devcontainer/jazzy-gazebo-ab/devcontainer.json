@@ -10,22 +10,28 @@
 	"runArgs": [
 		"--privileged",
 		// "--network=host",
+		// "--pid=host" // DDS discovery with host, without --network=host
 		"--ipc=host",
+		// allows to uses ptrace-based debugging tools
 		"--cap-add=SYS_PTRACE",
 		"--security-opt=seccomp:unconfined",
 		"--security-opt=apparmor:unconfined",
 		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
-		"--volume=/mnt/wslg:/mnt/wslg",
-		"--volume=/usr/lib/wsl:/usr/lib/wsl",
-		"--device=/dev/dxg",
-
 		// "--volume=${localEnv:XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority",
 		"--volume=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history:/root/.bash_history",
-		"--env=DISPLAY=${localEnv:DISPLAY}",
-		// "--volume=/mnt/wslg/.X11-unix:/tmp/.X11-unix",
-		// "--gpus all"
+		// "--env=DISPLAY=${localEnv:DISPLAY}",
+		// "--volume=/mnt/wslg:/mnt/wslg",
+		"--env=DISPLAY=10.244.165.24:0.0",
+		"--env=QT_X11_NO_MITSHM=1",
+		"--gpus=all",
 		// uncomment to use intel iGPU
-		"--device=/dev/dri"
+		"--volume=/dev/dri:/dev/dri",
+		"--volume=/dev/ttyUSB0:/dev/ttyUSB0",
+		// "--device=/dev/ttyUSB0:/dev/USB0",
+		// "--device=/dev/dri/card0:/dev/dri/card0",
+  		// "--device=/dev/dri/card1:/dev/dri/card1",
+  		// "--device=/dev/dri/renderD128:/dev/dri/renderD128",
+  		// "--device=/dev/dri/renderD129:/dev/dri/renderD129"
 	],
 	// "mounts": [
         // 	// "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
@@ -48,32 +54,17 @@
 	// 	// }
 	// ],
 	"containerEnv": {
-		// "DISPLAY": ":0",
 		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
-		// "QT_QPA_PLATFORM": "vnc",
+		"QT_QPA_PLATFORM": "xcb",
 		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
 		"XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
 		// "XDG_RUNTIME_DIR": "/var/run/user/1000",
-		// "XDG_RUNTIME_DIR": "/mnt/wslg/runtime-dir",
 		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
-		// "PULSE_SERVER": "/mnt/wslg/PulseServer",
-		"LD_LIBRARY_PATH": "/usr/lib/wsl/lib",
-		"LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
+		// "LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
 	},
-	// "features": {
-	//   "ghcr.io/devcontainers/features/desktop-lite:1": {}
-	// },
-	// "forwardPorts": [6080, 5901],
-	// "portsAttributes": {
-	//   "6080": {
-	//     "label": "Desktop(Web)"
-	//     // "onAutoForward": "notify"
-	//   },
-	//   "5901":{
-	//     "label": "Desktop(VNC)"
-	//     // "onAutoForward": "notify"
-	//   }
-	// },
+	"hostRequirements": {
+		"gpu": "optional"
+	},
 	// Set *default* container specific settings.json values on container create.
 	"customizations": {
 		"vscode": {

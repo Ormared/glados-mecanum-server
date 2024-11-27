@@ -1,0 +1,16 @@
+teleop_to_serial_node:
+  ros__parameters:
+    # STM
+    from_stm_message_size_bytes: 39
+    to_stm_message_size_bytes: 20
+    device_id: 0xa8
+    message_id: 1
+    frequency_constant: 10000.0
+    max_frequency: 32767.0
+    # Measurements
+    r: 0.1
+    lx: 0.1625
+    ly: 0.2
+    # Gazebo
+    use_sim_time: true
+

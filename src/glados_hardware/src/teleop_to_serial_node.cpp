@@ -2,12 +2,17 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
-#include "glados_hardware/msg/int8_array.hpp"  // Custom message for serial communication
+#include "glados_hardware/msg/int8_array.hpp"
 #include <cmath>
 
-constexpr uint32_t CRC_POLYNOMIAL = 0x18005;  // Polynomial for CRC calculation
-constexpr uint32_t CRC_INITIAL = 0xFFFF;     // Initial value for CRC
-constexpr uint32_t CRC_XOR_OUT = 0x0000;     // Final XOR value
+// Odometry
+#include "nav_msgs/msg/odometry.hpp"
+#include "tf2_ros/transform_broadcaster.h"
+#include "geometry_msgs/msg/transform_stamped.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+
+// JointState
+#include "sensor_msgs/msg/joint_state.hpp"
 
 // uint16_t crc16_modbus(const std::vector<uint8_t>& data)
 static uint16_t crc16_modbus(const std::vector<uint8_t>& buf) {
@@ -73,72 +78,102 @@ double getThresholdedValue(double value, double threshold)
     return value;
 }
 
-// Convert Twist (velocity) to frequencies for the motors
-std::vector<int16_t> toFreqs(float v_x, float v_y, float omega)
-{
-    const int STM_CONSTANT = 10000;
-    const float r = 0.1;  // Wheel radius
-    const float l_x = 0.1575;  // Distance from the center of the robot to the wheels along the x-axis
-    const float l_y = 0.215;   // Distance from the center of the robot to the wheels along the y-axis
-    const int MAX_FREQ = 32767;
+const int N_JOINTS = 4;
 
-    std::vector<int16_t> freqs(4);
-
-    // printf("Received v_x_y_o: %f %f %f", v_x, v_y, omega);
-    // printf("Received freq: %f", (MAX_FREQ * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI)));
-    // Calculate the frequencies for each wheel (simplified kinematics)
-    // freqs[0] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI));
-    // freqs[1] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI));
-    // freqs[2] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI));
-    // freqs[3] = static_cast<int16_t>(MAX_FREQ * (1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI));
-    freqs[0] = static_cast<int16_t>(getThresholdedValue(STM_CONSTANT * (1/r) * (v_x - v_y - (l_x + l_y) * omega) / (2 * M_PI), MAX_FREQ));
-    freqs[1] = static_cast<int16_t>(getThresholdedValue(STM_CONSTANT * (1/r) * (v_x + v_y + (l_x + l_y) * omega) / (2 * M_PI), MAX_FREQ));
-    freqs[2] = static_cast<int16_t>(getThresholdedValue(STM_CONSTANT * (1/r) * (v_x + v_y - (l_x + l_y) * omega) / (2 * M_PI), MAX_FREQ));
-    freqs[3] = static_cast<int16_t>(getThresholdedValue(STM_CONSTANT * (1/r) * (v_x - v_y + (l_x + l_y) * omega) / (2 * M_PI), MAX_FREQ));
-
-    return freqs;
-}
-
-class TeleopToSerialNode : public rclcpp::Node
-{
+class TeleopToSerialNode : public rclcpp::Node {
 public:
-    TeleopToSerialNode() : Node("teleop_to_serial_node")
-    {
-        // Subscription to Twist message (from teleop-twist-joy)
+    TeleopToSerialNode() : Node("teleop_to_serial_node"),
+                           first_message_(true),
+                           x_(0.0),
+                           y_(0.0),
+                           theta_(0.0) {
+        joint_names_.resize(N_JOINTS);
+        accumulated_angles_ = std::vector<double>(4, 0.0);
+
+        // STM
+        this->declare_parameter<int>("from_stm_message_size_bytes", 39);
+        this->declare_parameter<int>("to_stm_message_size_bytes", 20);
+        this->declare_parameter<int>("device_id", 0xa8);
+        this->declare_parameter<int>("message_id", 1);
+        this->declare_parameter<double>("frequency_constant", 10000.0);
+        this->declare_parameter<double>("max_frequency", 32767.0);
+        this->get_parameter("from_stm_message_size_bytes", from_stm_message_size_bytes_);
+        this->get_parameter("to_stm_message_size_bytes", to_stm_message_size_bytes_);
+        this->get_parameter("device_id", device_id_);
+        this->get_parameter("message_id", message_id_);
+        this->get_parameter("frequency_constant", frequency_constant_);
+        this->get_parameter("max_frequency", max_frequency_);
+
+        // Measurements and properties
+        this->declare_parameter<std::string>("fl_joint_name", "front_left_wheel_joint");
+        this->declare_parameter<std::string>("fr_joint_name", "front_right_wheel_joint");
+        this->declare_parameter<std::string>("rl_joint_name", "rear_left_wheel_joint");
+        this->declare_parameter<std::string>("rr_joint_name", "rear_right_wheel_joint");
+        this->declare_parameter<double>("r", 0.1);
+        this->declare_parameter<double>("lx", 0.1625);
+        this->declare_parameter<double>("ly", 0.2);
+        this->get_parameter("fl_joint_name", joint_names_[0]);
+        this->get_parameter("fr_joint_name", joint_names_[1]);
+        this->get_parameter("rl_joint_name", joint_names_[2]);
+        this->get_parameter("rr_joint_name", joint_names_[3]);
+        this->get_parameter("r", r_);
+        this->get_parameter("lx", lx_);
+        this->get_parameter("ly", ly_);
+
+        // Velocity
         twist_subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
             "cmd_vel", 10, std::bind(&TeleopToSerialNode::twist_callback, this, std::placeholders::_1));
 
-        // Publisher for Int8Array message
+        // Serial
         serial_publisher_ = this->create_publisher<glados_hardware::msg::Int8Array>("serial_write", 10);
-
         serial_subscription_ = this->create_subscription<glados_hardware::msg::Int8Array>(
             "serial_read", 10, std::bind(&TeleopToSerialNode::serial_callback, this, std::placeholders::_1));
 
-        frequency_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("wheel_frequencies", 10);
+        // Odometry
+        odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
+        tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
+
+        // JointState publisher
+        joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
     }
 
 private:
+    std::vector<int16_t> velocitiesToFrequencies(const double &v_x,
+                                                 const double &v_y,
+                                                 const double &omega) {
+        std::vector<int16_t> frequencies(4);
+
+        frequencies[0] = static_cast<int16_t>(
+            getThresholdedValue(frequency_constant_ * (1/r_) * (v_x - v_y - (lx_ + ly_) * omega) / (2 * M_PI), max_frequency_));
+        frequencies[1] = static_cast<int16_t>(
+            getThresholdedValue(frequency_constant_ * (1/r_) * (v_x + v_y + (lx_ + ly_) * omega) / (2 * M_PI), max_frequency_));
+        frequencies[2] = static_cast<int16_t>(
+            getThresholdedValue(frequency_constant_ * (1/r_) * (v_x + v_y - (lx_ + ly_) * omega) / (2 * M_PI), max_frequency_));
+        frequencies[3] = static_cast<int16_t>(
+            getThresholdedValue(frequency_constant_ * (1/r_) * (v_x - v_y + (lx_ + ly_) * omega) / (2 * M_PI), max_frequency_));
+        
+        return frequencies;
+    }
+
     void twist_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
-        const uint8_t DEVICE_ID = 0xa8;
-        const uint8_t MESSAGE_LENGTH = 20;
-        const uint8_t MESSAGE_ID = 1;
-
-        // Convert Twist data to motor frequencies
-        auto freqs = toFreqs(msg->linear.x, msg->linear.y, msg->angular.z);
-	// auto freqs = std::vector<uint16_t>( {5000, 5000, 0, 0} );
-
-        // RCLCPP_INFO(this->get_logger(), "Sending_new: %d %d %d %d", freqs[0], freqs[1], freqs[2], freqs[3]);
+        auto frequencies = velocitiesToFrequencies(msg->linear.x, msg->linear.y, msg->angular.z);
 
         // Prepare the serial data message
         std::vector<uint8_t> serial_data = {
-            DEVICE_ID, MESSAGE_LENGTH, MESSAGE_ID,
-	        0, 0, 0, 0,
-            static_cast<uint8_t>((freqs[2] >> 8) & 0xFF), static_cast<uint8_t>(freqs[2] & 0xFF),
-            static_cast<uint8_t>((freqs[3] >> 8) & 0xFF), static_cast<uint8_t>(freqs[3] & 0xFF),
-            static_cast<uint8_t>((freqs[1] >> 8) & 0xFF), static_cast<uint8_t>(freqs[1] & 0xFF),
-            static_cast<uint8_t>((freqs[0] >> 8) & 0xFF), static_cast<uint8_t>(freqs[0] & 0xFF),
-            0, 0, 0  // Placeholder bytes for future use
+            static_cast<uint8_t>(device_id_),
+            static_cast<uint8_t>(to_stm_message_size_bytes_),
+            static_cast<uint8_t>(message_id_),
+            0, 0, 0, 0,
+            static_cast<uint8_t>((frequencies[2] >> 8) & 0xFF),
+            static_cast<uint8_t>(frequencies[2] & 0xFF),
+            static_cast<uint8_t>((frequencies[3] >> 8) & 0xFF),
+            static_cast<uint8_t>(frequencies[3] & 0xFF),
+            static_cast<uint8_t>((frequencies[1] >> 8) & 0xFF),
+            static_cast<uint8_t>(frequencies[1] & 0xFF),
+            static_cast<uint8_t>((frequencies[0] >> 8) & 0xFF),
+            static_cast<uint8_t>(frequencies[0] & 0xFF),
+            0, 0, 0
         };
 
         // Calculate and append CRC to the message
@@ -154,41 +189,134 @@ private:
 
     void serial_callback(const glados_hardware::msg::Int8Array::SharedPtr msg)
     {
-        if (msg->data.size() != 39)
-        {
-            RCLCPP_WARN(this->get_logger(), "Invalid message length: %zu", msg->data.size());
+        const auto current_time = this->now();
+
+        if (first_message_) {
+            last_time_ = current_time;
+            first_message_ = false;
             return;
         }
 
-        RCLCPP_INFO(this->get_logger(), "Serial callback:");
+        // Extract frequencies in rad/s
         auto data = msg->data;
 
-        // Extract and calculate frequencies
-        double freq3 = static_cast<int16_t>(
-            ((static_cast<int16_t>(msg->data[13]) << 8) & 0xFFFF) |
-            (static_cast<int16_t>(msg->data[14]) & 0xFF)) / 10000.;
-        double freq4 = static_cast<int16_t>(
-            ((static_cast<int16_t>(msg->data[15]) << 8) & 0xFFFF) |
-            (static_cast<int16_t>(msg->data[16]) & 0xFF)) / 10000.;
-        double freq2 = static_cast<int16_t>(
-            ((static_cast<int16_t>(msg->data[17]) << 8) & 0xFFFF) |
-            (static_cast<int16_t>(msg->data[18]) & 0xFF)) / 10000.;    
-        double freq1 = static_cast<int16_t>(
-            ((static_cast<int16_t>(msg->data[19]) << 8) & 0xFFFF) |
-            (static_cast<int16_t>(msg->data[20]) & 0xFF)) / 10000.;   
+        static const double twoPi = 2 * M_PI;
 
-        std::vector<double> temp = {freq1, freq2, freq3, freq4};
+        // Frequencies in rad/s
+        const std::vector<double> frequencies = {
+            static_cast<int16_t>(data[19] * 256 + data[20]) / frequency_constant_ * twoPi,
+            static_cast<int16_t>(data[17] * 256 + data[18]) / frequency_constant_ * twoPi,
+            static_cast<int16_t>(data[13] * 256 + data[14]) / frequency_constant_ * twoPi,
+            static_cast<int16_t>(data[15] * 256 + data[16]) / frequency_constant_ * twoPi
+        };
 
-        auto frequency_msg = std_msgs::msg::Float64MultiArray();
-        frequency_msg.data = temp;
+        publishOdometry(frequencies, current_time);
+        publishJointStates(frequencies, current_time);
 
-        frequency_publisher_->publish(frequency_msg);
+        last_time_ = current_time;
     }
+
+    void publishJointStates(const std::vector<double> &frequencies,
+                            const rclcpp::Time &current_time) {
+        const double dt = (current_time - last_time_).seconds();
+        
+        // Compute delta angles and accumulate them
+        for (int i = 0; i < N_JOINTS; ++i) {
+            accumulated_angles_[i] += frequencies[i] * dt;
+        }
+
+        // Publish joint states
+        sensor_msgs::msg::JointState joint_state_msg;
+        joint_state_msg.header.stamp = current_time;
+        joint_state_msg.name = joint_names_;
+        joint_state_msg.position = accumulated_angles_;
+
+        joint_state_publisher_->publish(joint_state_msg);
+    }
+
+    void publishOdometry(const std::vector<double> &frequencies,
+                         const rclcpp::Time &current_time) {
+        const double dt = (current_time - last_time_).seconds();
+        
+        // Compute velocities in m/s
+        const double vx = r_ * (frequencies[0] + frequencies[1] + frequencies[2] + frequencies[3]) / 4.0;
+        const double vy = r_ * (-frequencies[0] + frequencies[1] + frequencies[2] - frequencies[3]) / 4.0;
+        const double omega = r_ * (-frequencies[0] + frequencies[1] - frequencies[2] + frequencies[3]) / (4.0 * (lx_ + ly_));
+
+        // Update pose using velocities
+        const double dx = (vx * std::cos(theta_) - vy * std::sin(theta_)) * dt;
+        const double dy = (vx * std::sin(theta_) + vy * std::cos(theta_)) * dt;
+        const double dtheta = omega * dt;
+        x_ += dx;
+        y_ += dy;
+        theta_ += dtheta;
+
+        // Publish Odometry
+        nav_msgs::msg::Odometry odom_msg;
+        odom_msg.header.stamp = current_time;
+        odom_msg.header.frame_id = "odom";
+        odom_msg.child_frame_id = "base_footprint";
+
+        odom_msg.pose.pose.position.x = x_;
+        odom_msg.pose.pose.position.y = y_;
+        odom_msg.pose.pose.position.z = 0.0;
+
+        tf2::Quaternion q;
+        q.setRPY(0, 0, theta_);
+        odom_msg.pose.pose.orientation.x = q.x();
+        odom_msg.pose.pose.orientation.y = q.y();
+        odom_msg.pose.pose.orientation.z = q.z();
+        odom_msg.pose.pose.orientation.w = q.w();
+
+        odom_msg.twist.twist.linear.x = vx;
+        odom_msg.twist.twist.linear.y = vy;
+        odom_msg.twist.twist.angular.z = omega;
+
+        odom_publisher_->publish(odom_msg);
+
+        // Publish Transform
+        geometry_msgs::msg::TransformStamped transform;
+        transform.header.stamp = current_time;
+        transform.header.frame_id = "odom";
+        transform.child_frame_id = "base_footprint";
+
+        transform.transform.translation.x = x_;
+        transform.transform.translation.y = y_;
+        transform.transform.translation.z = 0.0;
+        transform.transform.rotation = odom_msg.pose.pose.orientation;
+
+        tf_broadcaster_->sendTransform(transform);
+    }
+
+    // STM constants
+    int from_stm_message_size_bytes_;
+    int to_stm_message_size_bytes_;
+    int device_id_;
+    int message_id_;
+    double frequency_constant_;
+    double max_frequency_;
+    double r_;
+    double lx_;
+    double ly_;
+
+    bool first_message_;
+
+    // JointState
+    std::vector<std::string> joint_names_;
+    std::vector<double> accumulated_angles_;
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_publisher_;
+
+    // Odometry
+    double x_;
+    double y_;
+    double theta_;
+    rclcpp::Time last_time_;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr twist_subscription_;
     rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr serial_publisher_;
     rclcpp::Subscription<glados_hardware::msg::Int8Array>::SharedPtr serial_subscription_;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr frequency_publisher_;
 };
 
 int main(int argc, char *argv[])
@@ -199,4 +327,3 @@ int main(int argc, char *argv[])
     rclcpp::shutdown();
     return 0;
 }
-

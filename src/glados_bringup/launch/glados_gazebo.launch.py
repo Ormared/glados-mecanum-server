@@ -104,7 +104,7 @@ def generate_launch_description():
         package='glados_hardware',
         executable='teleop_to_serial_node',
         name='teleop',
-        parameters=[{'use_sim_time': use_sim_time}]
+        parameters=["src/glados_hardware/config/teleop_params.yaml"]
     )
 
     # Serial gz adapter
@@ -151,8 +151,8 @@ def generate_launch_description():
         robot_state_publisher,
         teleop,
         serial_gz_adapter,
-        joint_state_publisher,
-        odometry_publisher,
+        # joint_state_publisher,
+        # odometry_publisher,
         ekf_robot_localization,
         DeclareLaunchArgument('rviz', default_value='true',
                               description='Open RViz.'),
