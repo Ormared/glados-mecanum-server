@@ -1,4 +1,3 @@
-
 FROM althack/ros2:jazzy-gazebo
 
 # Add user to video group to allow access to webcam
@@ -34,6 +33,8 @@ RUN apt-get -y install --no-install-recommends \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
+
+# ENV DISPLAY=192.168.31.24:0.0
 
 # RUN git clone https://github.com/Slamtec/rplidar_sdk \
 #       && cd rplidar_sdk \
@@ -73,4 +74,3 @@ RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/in
 # ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 
 # RUN sudo chmod 0700 /var/run/user/
-
