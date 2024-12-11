@@ -3,23 +3,14 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
-        // Build tasks
-        // {
-        //     "label": "build",
-        //     "detail": "Build workspace (default)",
-        //     "type": "shell",
-        //     "command": "./build.sh",
-        //     "group": {
-        //         "kind": "build",
-        //         "isDefault": true
-        //     },
-        //     "problemMatcher": "$gcc"
-        // },
         {
             "label": "build",
             "detail": "Build workspace (default)",
             "type": "shell",
             "command": "colcon build",
+            "problemMatcher": [
+                "$ament_flake8"
+            ]
         },
         {
             "label": "build_release",
@@ -38,68 +29,117 @@
             "label": "source local",
             "detail": "Source local workspace",
             "type": "shell",
-            "command": "source install/setup.bash",
+            "command": "source install/setup.bash"
         },
         {
             "label": "rqt graph",
             "detail": "Launch rqt graph",
             "type": "shell",
-            "command": "rqt_graph",
+            "command": "rqt_graph"
         },
         {
             "label": "la_gazebo",
             "detail": "Launch glados gazebo launch file",
             "type": "shell",
-            "command": "ros2 launch glados_bringup glados_gazebo.launch.py",
+            "command": "ros2 launch glados_bringup glados_gazebo.launch.py"
+        },
+        {
+            "label": "lax_gazebo",
+            "detail": "Launch foglove glados gazebo launch file",
+            "type": "shell",
+            "command": "ros2 launch glados_bringup glados_gazebo.fox.launch.py"
         },
         {
             "label": "gazebo depot",
             "detail": "Launch glados gazebo launch file",
             "type": "shell",
-            "command": "ros2 launch glados_bringup glados_gazebo.launch.py world:=depot",
+            "command": "ros2 launch glados_bringup glados_gazebo.launch.py world:=depot"
         },
         {
             "label": "slam_toolbox",
             "detail": "Launch slam_toolbox with slam_params_file",
             "type": "shell",
-            "command": "ros2 launch slam_toolbox online_async_launch.py slam_params_file:=./src/glados_bringup/config/mapper_params_online_async.yaml ",
+            "command": "ros2 launch slam_toolbox online_async_launch.py slam_params_file:=./src/glados_bringup/config/mapper_params_online_async.yaml "
         },
         {
-            "label": "map server",
+            "label": "slam_toolbox_gz",
+            "detail": "Launch slam_toolbox with slam_params_file",
+            "type": "shell",
+            "command": "ros2 launch slam_toolbox online_async_launch.py slam_params_file:=./src/glados_bringup/config/mapper_params_online_async.yaml use_sim_time:=true"
+        },
+        {
+            "label": "map server_gz",
             "detail": "Launch map server",
             "type": "shell",
-            "command": "ros2 run nav2_map_server map_server --ros-args -p yaml_filename:=map_glados2.yaml",
+            "command": "ros2 run nav2_map_server map_server --ros-args -p yaml_filename:=map_save.yaml -p use_sim_time:=true"
         },
         {
             "label": "map bringup",
             "detail": "Launch map lifecycle bringup",
             "type": "shell",
             "dependsOn": "map server",
-            "command": "ros2 run nav2_util lifecycle_bringup map_server",   
+            "command": "ros2 run nav2_util lifecycle_bringup map_server",
+            "problemMatcher": []
+        },
+        {
+            "label": "amcl_gz",
+            "detail": "Launch amcl gz",
+            "type": "shell",
+            "command": "ros2 run nav2_amcl amcl --ros-args -p use_sim_time:=true"
         },
         {
             "label": "amcl",
             "type": "shell",
             "command": "ros2 launch nav2_amcl amcl",
-            "dependsOn": "map lifecycle",
+            "dependsOn": "map lifecycle"
         },
         {
             "label": "bringup amcl",
             "type": "shell",
             "command": "ros2 run nav2_util lifecycle_bringup amcl",
-            "dependsOn": "amcl",
+            "dependsOn": "amcl"
+        },
+        {
+            "label": "nav2_localization_gz",
+            "detail": "Launch amcl localization",
+            "type": "shell",
+            "command": "ros2 launch glados_bringup glados_localization_launch.py use_sim_time:=true"
+        },
+        {
+            "label": "nav2_localization",
+            "detail": "Launch amcl localization",
+            "type": "shell",
+            "command": "ros2 launch glados_bringup glados_localization_launch.py"
+        },
+        {
+            "label": "nav2_navigation_gz",
+            "detail": "Launch navigation system",
+            "type": "shell",
+            "command": "ros2 launch glados_bringup glados_navigation_launch.py use_sim_time:=true"
+        },
+        {
+            "label": "nav2_navigation",
+            "detail": "Launch navigation system",
+            "type": "shell",
+            "command": "ros2 launch glados_bringup glados_navigation_launch.py"
+        },
+        {
+            "label": "ball_tracker",
+            "detail": "Launch ball tracker node",
+            "type": "shell",
+            "command": "ros2 launch glados_bringup glados_ball_tracker.launch.py use_sim_time:=true"
         },
         {
             "label": "rviz",
             "detail": "Launch rviz",
             "type": "shell",
-            "command": "ros2 launch glados_bringup glados_rviz.launch.py",
+            "command": "ros2 launch glados_bringup glados_rviz.launch.py"
         },
         {
             "label": "teleop_keyboard",
             "detail": "Launch teleop keyboard",
             "type": "shell",
-            "command": "ros2 run teleop_twist_keyboard teleop_twist_keyboard",
+            "command": "ros2 run teleop_twist_keyboard teleop_twist_keyboard"
         },
         {
             "label": "debug",
@@ -114,7 +154,6 @@
             "group": "build",
             "problemMatcher": "$gcc"
         },
-        // Test tasks
         {
             "label": "test",
             "detail": "Run all unit tests and show results.",
@@ -125,7 +164,6 @@
                 "isDefault": true
             }
         },
-        // Clean
         {
             "label": "clean",
             "detail": "Run the clean target",
@@ -147,7 +185,6 @@
             "command": "source /opt/ros/jazzy/setup.bash",
             "problemMatcher": []
         },
-        // Linting and static code analysis tasks
         {
             "label": "fix",
             "detail": "Reformat files with uncrustify.",
@@ -171,7 +208,6 @@
                     "source": "uncrustify",
                     "fileLocation": "relative",
                     "pattern": [
-                        // just the file name message
                         {
                             "regexp": "^(.*)'(.*)':",
                             "kind": "file",
@@ -193,7 +229,7 @@
                 "panel": "dedicated",
                 "reveal": "silent",
                 "clear": true
-            },
+            }
         },
         {
             "label": "cppcheck",
@@ -279,7 +315,6 @@
             ],
             "problemMatcher": []
         },
-        // Workspace editing tasks
         {
             "label": "new ament_cmake package",
             "detail": "Create a new ROS cpp package from a template.",

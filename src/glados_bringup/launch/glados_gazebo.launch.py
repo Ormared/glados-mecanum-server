@@ -28,8 +28,16 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     # Configure ROS nodes for launch
+
+    fox_bridge = LaunchConfiguration('fox_bridge', default='true')
+    fox_bridge_dec = DeclareLaunchArgument(
+        'fox_bridge',
+        default_value='true',
+        description='Run foxglove bridge'
+    )
+
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
-    world = LaunchConfiguration('world', default='glados.sdf')
+    world = LaunchConfiguration('world', default='cubes_with_ball.sdf')
     # world = LaunchConfiguration('world', default='warehouse.sdf')
     # world = LaunchConfiguration('world', default='glados_obs.sdf')
 
@@ -87,6 +95,17 @@ def generate_launch_description():
        parameters=[{'use_sim_time': use_sim_time}]
     )
 
+    foxglove = Node(
+        package="foxglove_bridge",
+        executable="foxglove_bridge",
+        name="foxglove_bridge",
+        condition=IfCondition(fox_bridge),
+        parameters=[
+            {'robot_description': robot_desc},
+            {'use_sim_time': use_sim_time}
+        ]
+    )
+
     # Bridge ROS topics and Gazebo messages for establishing communication
     bridge = Node(
         package='ros_gz_bridge',
@@ -104,7 +123,10 @@ def generate_launch_description():
         package='glados_hardware',
         executable='teleop_to_serial_node',
         name='teleop',
-        parameters=["src/glados_hardware/config/teleop_params.yaml"]
+        parameters=[
+            "src/glados_hardware/config/teleop_params.yaml",
+            {"use_sim_time": True}
+        ]
     )
 
     # Serial gz adapter
@@ -112,22 +134,6 @@ def generate_launch_description():
         package='glados_hardware',
         executable='serial_gz_adapter_node',
         name='serial_gz_adapter',
-        parameters=[{'use_sim_time': use_sim_time}]
-    )
-
-    # Joint state publisher
-    joint_state_publisher = Node(
-        package='glados_application',
-        executable='joint_state_publisher_node',
-        name='joint_state_publisher',
-        parameters=[{'use_sim_time': use_sim_time}]
-    )
-
-    # Odometry publisher
-    odometry_publisher = Node(
-        package='glados_application',
-        executable='odometry_node',
-        name='odometry_publisher',
         parameters=[{'use_sim_time': use_sim_time}]
     )
 
@@ -145,16 +151,15 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        gz_sim,
         declare_use_sim_time,
         bridge,
-        robot_state_publisher,
-        teleop,
+        gz_sim,
         serial_gz_adapter,
-        # joint_state_publisher,
-        # odometry_publisher,
-        ekf_robot_localization,
+        teleop,
+        robot_state_publisher,
+        # ekf_robot_localization,
         DeclareLaunchArgument('rviz', default_value='true',
                               description='Open RViz.'),
-        rviz
+        rviz,
+        foxglove,
     ])

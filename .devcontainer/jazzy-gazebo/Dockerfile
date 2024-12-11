@@ -7,6 +7,10 @@ RUN apt-get update \
    && apt-get -y install --no-install-recommends \
    libxkbcommon-x11-0 \
    libxcb-xinerama0 \
+   libxcb-xkb1 \
+   libxcb-render-util0 \
+   libx11-xcb1 \
+   xvfb \
    libxcb-xinput0 \
    x11-apps \
    iputils-ping \
@@ -24,6 +28,7 @@ RUN apt-get update \
    ros-jazzy-robot-localization \
    ros-jazzy-slam-toolbox \
    ros-jazzy-foxglove-bridge \
+   ros-jazzy-sdformat-urdf \
    net-tools \
    ufw \
    ros-jazzy-cv-bridge \
@@ -32,6 +37,7 @@ RUN apt-get update \
 RUN apt-get -y install --no-install-recommends \
    libopencv-dev \
    python3-opencv \
+   ros-jazzy-teleop-twist-keyboard \
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*

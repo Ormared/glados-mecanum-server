@@ -11,6 +11,4 @@ teleop_to_serial_node:
     r: 0.1
     lx: 0.1625
     ly: 0.2
-    # Gazebo
-    use_sim_time: true
 

@@ -11,29 +11,24 @@ class SerialNode : public rclcpp::Node
 public:
     SerialNode() : Node("serial_node")
     {
-        // Load parameters
         this->declare_parameter<std::string>("port_name", "/dev/ttyUSB0");
         this->declare_parameter<int>("baud_rate", 38400);
         this->get_parameter("port_name", port_name_);
         this->get_parameter("baud_rate", baud_rate_);
 
-        // Open the serial port
         serial_port_ = open_serial_port(port_name_, baud_rate_);
         if (serial_port_ < 0) {
             RCLCPP_ERROR(this->get_logger(), "Failed to open serial port: %s", port_name_.c_str());
             return;
         }
 
-        // Subscribe to a topic
         subscription_ = this->create_subscription<glados_hardware::msg::Int8Array>(
             "serial_write", 10, std::bind(&SerialNode::write_to_serial, this, std::placeholders::_1));
 
-        // Publish data from the serial port
         publisher_ = this->create_publisher<glados_hardware::msg::Int8Array>("serial_read", 10);
 
-        // Timer to periodically check the serial port for data
         timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(50), std::bind(&SerialNode::read_from_serial, this));
+            std::chrono::milliseconds(30), std::bind(&SerialNode::read_from_serial, this));
     }
 
     ~SerialNode()
@@ -90,11 +85,12 @@ private:
     void read_from_serial() {
         if (serial_port_ < 0) return;
 
-        uint8_t buffer[256]; // uint8_t buffer to match the custom message
+        uint8_t buffer[39]; // uint8_t buffer to match the custom message
+        // uint8_t buffer[256]; // uint8_t buffer to match the custom message
         ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
-        if (bytes_read > 0) {
-            auto message = glados_hardware::msg::Int8Array(); // Replace with your package name
-            message.data = std::vector<uint8_t>(buffer, buffer + bytes_read); // Populate uint8[] field
+        if (bytes_read == 39) {
+            auto message = glados_hardware::msg::Int8Array();
+            message.data = std::vector<uint8_t>(buffer, buffer + bytes_read);
             publisher_->publish(message);
         }
         return;
