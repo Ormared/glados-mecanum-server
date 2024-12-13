@@ -38,6 +38,7 @@ RUN apt-get -y install --no-install-recommends \
    libopencv-dev \
    python3-opencv \
    ros-jazzy-teleop-twist-keyboard \
+
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
