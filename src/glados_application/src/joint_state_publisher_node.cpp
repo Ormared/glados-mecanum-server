@@ -50,7 +50,7 @@ private:
             // Compute initial angular velocities from first message and store them
             for (size_t i = 0; i < msg->data.size(); ++i)
             {
-                last_angular_velocities_[i] = msg->data[i] * 2 * M_PI;
+                last_angular_velocities_[i] = msg->data[i];
             }
 
             first_message_ = false;     // Mark as not the first message anymore
@@ -65,7 +65,7 @@ private:
         for (size_t i = 0; i < msg->data.size(); ++i)
         {   
             accumulated_angles_[i] += last_angular_velocities_[i] * dt;
-            last_angular_velocities_[i] = msg->data[i] * 2 * M_PI;
+            last_angular_velocities_[i] = msg->data[i];
         }
 
         // Publish joint states

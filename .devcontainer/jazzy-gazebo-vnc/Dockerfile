@@ -24,6 +24,9 @@ RUN apt-get update \
    ros-jazzy-twist-mux \
    ros-jazzy-robot-localization \
    ros-jazzy-slam-toolbox \
+   ros-jazzy-foxglove-bridge \
+   net-tools \
+   ufw \
    ros-jazzy-cv-bridge \
    ros-jazzy-image-transport 
 
@@ -73,4 +76,3 @@ RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/in
 # ENV NVIDIA_DRIVER_CAPABILITIES graphics,utility,compute
 
 # RUN sudo chmod 0700 /var/run/user/
-

@@ -11,9 +11,13 @@ endif()
   find_package(std_msgs REQUIRED)
   find_package(geometry_msgs REQUIRED)
   find_package(sensor_msgs REQUIRED)
-  find_package(cv_bridge REQUIRED)
+
+  find_package(nav_msgs REQUIRED)
+  find_package(tf2_ros REQUIRED)
+  find_package(tf2 REQUIRED)
+  # find_package(cv_bridge REQUIRED)
   # find_package(OpenCV REQUIRED)
-  find_package(librealsense2 4.56.1 REQUIRED)
+  # find_package(librealsense2 4.56.1 REQUIRED)
 
 # Custom msg
   find_package(rosidl_default_generators REQUIRED)
@@ -37,7 +41,14 @@ endif()
 
 # Teleop node
   add_executable(teleop_to_serial_node src/teleop_to_serial_node.cpp)
-  ament_target_dependencies(teleop_to_serial_node rclcpp geometry_msgs std_msgs)
+  
+  ament_target_dependencies(teleop_to_serial_node
+                            rclcpp geometry_msgs
+                            std_msgs
+                            nav_msgs
+                            tf2_ros
+                            tf2
+                            sensor_msgs)
 
   target_link_libraries(teleop_to_serial_node "${cpp_typesupport_target}")
 

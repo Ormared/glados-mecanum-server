@@ -48,11 +48,11 @@ private:
 
         auto data = msg->data;
 
-        // Extract wheel frequencies and convert to angular velocities
-        const double freq1 = data[0] * 2 * M_PI;
-        const double freq2 = data[1] * 2 * M_PI;
-        const double freq3 = data[2] * 2 * M_PI;
-        const double freq4 = data[3] * 2 * M_PI;
+        // Extract wheel frequencies
+        const double freq1 = data[0];
+        const double freq2 = data[1];
+        const double freq3 = data[2];
+        const double freq4 = data[3];
 
         // Calculate linear and angular velocities
         last_vx_ = WHEEL_RADIUS * (freq1 + freq2 + freq3 + freq4) / 4.0;
@@ -67,7 +67,7 @@ private:
     {
         const auto current_time = this->now();
         const double dt = (current_time - last_time_).seconds();
-        RCLCPP_INFO(this->get_logger(), "dt: %f", dt);
+        // RCLCPP_INFO(this->get_logger(), "dt: %f", dt);
 
         // Update pose using velocities
         const double delta_x = (last_vx_ * std::cos(theta_) - last_vy_ * std::sin(theta_)) * dt;
@@ -79,7 +79,7 @@ private:
         theta_ += delta_theta;
 
         // Normalize theta to [-pi, pi]
-        theta_ = std::atan2(std::sin(theta_), std::cos(theta_));
+        // theta_ = std::atan2(std::sin(theta_), std::cos(theta_));
 
         publishOdometry(current_time);
         last_time_ = current_time;

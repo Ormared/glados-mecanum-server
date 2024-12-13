@@ -1,15 +1,22 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
+	"name": "Jazzy Nvidia Gazebo",
 	"dockerFile": "Dockerfile",
 	"build": {
 		"args": {
-			"WORKSPACE": "${containerWorkspaceFolder}"
+			"WORKSPACE": "${containerWorkspaceFolder}",
+			"runtime": "nvidia"
 		}
 	},
 	"remoteUser": "ros",
+	"remoteEnv": {
+		"PATH": "${containerEnv:PATH}:/usr/local/cuda/bin",
+    		"LD_LIBRARY_PATH": "$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64",
+    		"XLA_FLAGS": "--xla_gpu_cuda_data_dir=/usr/local/cuda"
+	},
 	"runArgs": [
 		"--privileged",
-		// "--network=host",
+		"--network=host",
 		"--ipc=host",
 		"--cap-add=SYS_PTRACE",
 		"--security-opt=seccomp:unconfined",
@@ -28,6 +35,9 @@
 		// uncomment to use Nvidia GPU with Windows WSL2
 		// "--volume=/usr/lib/wsl:/usr/lib/wsl",
 
+		"--runtime=nvidia",
+		"--gpus=all",
+		"--device=/dev/dri/card1",
 		"--device=/dev/dxg",
 		"--device=/dev/nvidia0",
 		"--device=/dev/nvidiactl",
@@ -36,7 +46,6 @@
 		"--device=/dev/nvidia-uvm-tools",
 		// "--device=/dev/dri/card0",
 		"--device=/dev/dri/renderD128",
-		"--gpus=all"
 	],
 	// "mounts": [
         // 	// "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
@@ -61,28 +70,30 @@
 	"containerEnv": {
 		// "DISPLAY": ":0",
 		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
-		// "QT_QPA_PLATFORM": "vnc",
+		"NVIDIA_DRIVER_CAPABILITIES": "all",
+		"QT_QPA_PLATFORM": "xcb",
 		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
 		// "XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
 		"XDG_RUNTIME_DIR": "/var/run/user/1000",
 		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
 		"LIBGL_ALWAYS_SOFTWARE": "1", // Needed for software rendering of opengl
-		"QT_X11_NO_MITSHM": "1"
+		"QT_X11_NO_MITSHM": "1",
+		"__EGL_VENDOR_LIBRARY_FILENAMES":"/usr/share/glvnd/egl_vendor.d/10_nvidia.json"
 	},
-	"features": {
-	  "ghcr.io/devcontainers/features/desktop-lite:1": {}
-	},
-	"forwardPorts": [6080, 5901],
-	"portsAttributes": {
-	  "6080": {
-	    "label": "Desktop(Web)"
-	    // "onAutoForward": "notify"
-	  },
-	  "5901":{
-	    "label": "Desktop(VNC)"
-	    // "onAutoForward": "notify"
-	  }
-	},
+	// "features": {
+	//   "ghcr.io/devcontainers/features/desktop-lite:1": {}
+	// },
+	// "forwardPorts": [6080, 5901],
+	// "portsAttributes": {
+	//   "6080": {
+	//     "label": "Desktop(Web)"
+	//     // "onAutoForward": "notify"
+	//   },
+	//   "5901":{
+	//     "label": "Desktop(VNC)"
+	//     // "onAutoForward": "notify"
+	//   }
+	// },
 	// Set *default* container specific settings.json values on container create.
 	"customizations": {
 		"vscode": {

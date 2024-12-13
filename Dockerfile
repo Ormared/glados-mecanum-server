@@ -36,7 +36,7 @@ COPY install /workspace/install
 COPY src /workspace/src
 # COPY entrypoint.sh /workspace/
 
-ENV ROS_DISCOVERY_SERVER=10.0.1.2:11811
+# ENV ROS_DISCOVERY_SERVER=10.0.1.2:11811
 
 RUN apt-get update \
   && apt-get -y install --no-install-recommends \
@@ -51,7 +51,8 @@ WORKDIR /workspace
 #ENTRYPOINT ["entrypoint.sh"]
 #CMD ["/bin/bash", "-c"]
 # CMD ["ros2", "launch", "glados_bringup", "glados_onrobot.launch.py"]
-ENTRYPOINT ["/bin/bash", "-c", "source install/setup.bash && ros2 launch glados_bringup glados_onrobot.launch.py"]
+# ENTRYPOINT ["/bin/bash", "-c", "source install/setup.bash && ros2 launch glados_bringup glados_onrobot.launch.py"]
+ENTRYPOINT ["/bin/bash", "-c", "source install/setup.bash && ros2 launch glados_bringup glados_onrobot.fox.launch.py"]
 # ENTRYPOINT ["/bin/bash", "-c", "source install/setup.bash && bash"]
 
 
