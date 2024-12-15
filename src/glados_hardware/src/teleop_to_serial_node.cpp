@@ -65,7 +65,7 @@ static uint16_t crc16_modbus(const std::vector<uint8_t>& buf) {
     return crc;
 }
 
-double getThresholdedValue(double value, double threshold)
+double getThresholdedValue(const double &value, const double &threshold)
 {
     if (value > threshold)
     {
@@ -73,7 +73,7 @@ double getThresholdedValue(double value, double threshold)
     }
     else if (value < -threshold)
     {
-        return -(threshold+1);
+        return -threshold;
     }
     return value;
 }
@@ -165,14 +165,14 @@ private:
             static_cast<uint8_t>(to_stm_message_size_bytes_),
             static_cast<uint8_t>(message_id_),
             0, 0, 0, 0,
-            static_cast<uint8_t>((frequencies[2] >> 8) & 0xFF),
-            static_cast<uint8_t>(frequencies[2] & 0xFF),
             static_cast<uint8_t>((frequencies[3] >> 8) & 0xFF),
             static_cast<uint8_t>(frequencies[3] & 0xFF),
-            static_cast<uint8_t>((frequencies[1] >> 8) & 0xFF),
-            static_cast<uint8_t>(frequencies[1] & 0xFF),
+            static_cast<uint8_t>((frequencies[2] >> 8) & 0xFF),
+            static_cast<uint8_t>(frequencies[2] & 0xFF),
             static_cast<uint8_t>((frequencies[0] >> 8) & 0xFF),
             static_cast<uint8_t>(frequencies[0] & 0xFF),
+            static_cast<uint8_t>((frequencies[1] >> 8) & 0xFF),
+            static_cast<uint8_t>(frequencies[1] & 0xFF),
             0, 0, 0
         };
 
@@ -204,10 +204,10 @@ private:
 
         // Frequencies in rad/s
         const std::vector<double> frequencies = {
-            static_cast<int16_t>(data[19] * 256 + data[20]) / frequency_constant_ * twoPi,
             static_cast<int16_t>(data[17] * 256 + data[18]) / frequency_constant_ * twoPi,
-            static_cast<int16_t>(data[13] * 256 + data[14]) / frequency_constant_ * twoPi,
-            static_cast<int16_t>(data[15] * 256 + data[16]) / frequency_constant_ * twoPi
+            static_cast<int16_t>(data[19] * 256 + data[20]) / frequency_constant_ * twoPi,
+            static_cast<int16_t>(data[15] * 256 + data[16]) / frequency_constant_ * twoPi,
+            static_cast<int16_t>(data[13] * 256 + data[14]) / frequency_constant_ * twoPi
         };
 
         publishOdometry(frequencies, current_time);
@@ -285,7 +285,7 @@ private:
         transform.transform.translation.z = 0.0;
         transform.transform.rotation = odom_msg.pose.pose.orientation;
 
-        tf_broadcaster_->sendTransform(transform);
+        // tf_broadcaster_->sendTransform(transform);
     }
 
     // STM constants

@@ -17,23 +17,27 @@ def generate_launch_description():
     )
 
     pkg_project_description = get_package_share_directory('glados_description')
+    pkg_project_hardware = get_package_share_directory('glados_hardware')
 
     sdf_file = os.path.join(pkg_project_description, 'models', 'glados', 'model.sdf')
     with open(sdf_file, 'r') as infp:
         robot_desc = infp.read()
 
+    serial_params = os.path.join(pkg_project_hardware, 'config', 'params.yaml')
+    teleop_params = os.path.join(pkg_project_hardware, 'config', 'teleop_params.yaml')
+
     serial = Node(
         package="glados_hardware",
         executable="serial_node",
         name="serial",
-        parameters=["src/glados_hardware/config/params.yaml"]
+        parameters=[serial_params]
     )
 
     teleop = Node(
         package="glados_hardware",
         executable="teleop_to_serial_node",
         name="teleop_to_serial",
-        parameters=["src/glados_hardware/config/teleop_params.yaml"]
+        parameters=[teleop_params]
     )
 
     robot_state_publisher = Node(
@@ -45,7 +49,7 @@ def generate_launch_description():
             {'use_sim_time': False},
             {'robot_description': robot_desc},
         ]
-    ),
+    )
 
     foxglove_bridge = Node(
         package="foxglove_bridge",

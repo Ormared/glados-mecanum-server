@@ -25,16 +25,16 @@ void SerialGzAdapterNode::serialWriteCallback(const glados_hardware::msg::Int8Ar
     const double ly = 0.215;
 
     // Extract frequencies from specific byte pairs
-    double freq3 = static_cast<int16_t>(
+    double freq4 = static_cast<int16_t>(
         ((static_cast<int16_t>(msg->data[7]) << 8) & 0xFFFF) |
         (static_cast<int16_t>(msg->data[8]) & 0xFF)) / 10000. * 2 * M_PI;
-    double freq4 = static_cast<int16_t>(
+    double freq3 = static_cast<int16_t>(
         ((static_cast<int16_t>(msg->data[9]) << 8) & 0xFFFF) |
         (static_cast<int16_t>(msg->data[10]) & 0xFF)) / 10000. * 2 * M_PI;
-    double freq2 = static_cast<int16_t>(
+    double freq1 = static_cast<int16_t>(
         ((static_cast<int16_t>(msg->data[11]) << 8) & 0xFFFF) |
         (static_cast<int16_t>(msg->data[12]) & 0xFF)) / 10000. * 2 * M_PI;    
-    double freq1 = static_cast<int16_t>(
+    double freq2 = static_cast<int16_t>(
         ((static_cast<int16_t>(msg->data[13]) << 8) & 0xFFFF) |
         (static_cast<int16_t>(msg->data[14]) & 0xFF)) / 10000. * 2 * M_PI;    
             
@@ -57,14 +57,14 @@ void SerialGzAdapterNode::jointStateCallback(const sensor_msgs::msg::JointState:
     auto serial_msg = glados_hardware::msg::Int8Array();    
     serial_msg.data = std::vector<uint8_t>{
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        static_cast<uint8_t>((wheel_velocities[2] >> 8) & 0xFF),
-        static_cast<uint8_t>(wheel_velocities[2] & 0xFF),
         static_cast<uint8_t>((wheel_velocities[3] >> 8) & 0xFF),
         static_cast<uint8_t>(wheel_velocities[3] & 0xFF),
-        static_cast<uint8_t>((wheel_velocities[1] >> 8) & 0xFF),
-        static_cast<uint8_t>(wheel_velocities[1] & 0xFF),
+        static_cast<uint8_t>((wheel_velocities[2] >> 8) & 0xFF),
+        static_cast<uint8_t>(wheel_velocities[2] & 0xFF),
         static_cast<uint8_t>((wheel_velocities[0] >> 8) & 0xFF),
         static_cast<uint8_t>(wheel_velocities[0] & 0xFF),
+        static_cast<uint8_t>((wheel_velocities[1] >> 8) & 0xFF),
+        static_cast<uint8_t>(wheel_velocities[1] & 0xFF),
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 
