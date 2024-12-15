@@ -27,7 +27,6 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    # Configure ROS nodes for launch
 
     fox_bridge = LaunchConfiguration('fox_bridge', default='true')
     fox_bridge_dec = DeclareLaunchArgument(
@@ -38,6 +37,7 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
     world = LaunchConfiguration('world', default='cubes_with_ball.sdf')
+    # world = LaunchConfiguration('world', default='perimeter.sdf')
     # world = LaunchConfiguration('world', default='warehouse.sdf')
     # world = LaunchConfiguration('world', default='glados_obs.sdf')
 
@@ -118,13 +118,16 @@ def generate_launch_description():
         output='screen'
     )
 
+    pkg_project_hardware = get_package_share_directory('glados_hardware')
+    teleop_params = os.path.join(pkg_project_hardware, 'config', 'teleop_params.yaml')
+
     # Teleop
     teleop = Node(
         package='glados_hardware',
         executable='teleop_to_serial_node',
         name='teleop',
         parameters=[
-            "src/glados_hardware/config/teleop_params.yaml",
+            teleop_params,
             {"use_sim_time": True}
         ]
     )
@@ -157,7 +160,7 @@ def generate_launch_description():
         serial_gz_adapter,
         teleop,
         robot_state_publisher,
-        # ekf_robot_localization,
+        ekf_robot_localization,
         DeclareLaunchArgument('rviz', default_value='true',
                               description='Open RViz.'),
         rviz,

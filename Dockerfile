@@ -1,4 +1,20 @@
-FROM althack/ros2:jazzy-dev AS base
+FROM althack/ros2:jazzy-gazebo
+
+# Add user to video group to allow access to webcam
+# RUN sudo usermod --append --groups video $USERNAME
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+   && apt-get -y install --no-install-recommends \
+   libxkbcommon-x11-0 \
+   libxcb-xinerama0 \
+   libxcb-xinput0 \
+   x11-apps \
+   iputils-ping \
+   # Clean up
+   && apt-get autoremove -y \
+   && apt-get clean -y \
+   && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=dialog
 
 RUN apt-get update \
    && apt-get -y install --no-install-recommends \
@@ -10,53 +26,28 @@ RUN apt-get update \
    ros-jazzy-foxglove-bridge \
    net-tools \
    ufw \
+   ros-jazzy-cv-bridge \
+   ros-jazzy-image-transport 
+
+RUN apt-get -y install --no-install-recommends \
+   libopencv-dev \
+   python3-opencv \
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
-
 ENV DEBIAN_FRONTEND=dialog
 
-WORKDIR /workspace
-COPY src src
+# RUN git clone https://github.com/Slamtec/rplidar_sdk \
+#       && cd rplidar_sdk \
+#       && make
 
-# RUN rosdep update
+# RUN mkdir -p /var/run/user && chmod 755 /var/run/user
+RUN sudo chown ros:ros /var/run/user
+
+ENV GZ_VERSION=harmonic
+# USER ros
+
+# Set up auto-source of workspace for ros user
 ARG WORKSPACE
 RUN echo "if [ -f ${WORKSPACE}/install/setup.bash ]; then source ${WORKSPACE}/install/setup.bash; fi" >> /home/ros/.bashrc
-RUN echo "export GZ_VERSION=harmonic" >> /home/ros/.bashrc
-# RUN rosdep install --from-paths src --rosdistro jazzy - 
-SHELL [ "/bin/bash", "-c" ]
-# RUN colcon build --packages-ignore glados_gazebo
-
-
-
-# FROM base AS builder
-
-FROM althack/ros2:jazzy-base AS final
-COPY install /workspace/install
-COPY src /workspace/src
-# COPY entrypoint.sh /workspace/
-
-# ENV ROS_DISCOVERY_SERVER=10.0.1.2:11811
-
-RUN apt-get update \
-  && apt-get -y install --no-install-recommends \
-  ros-jazzy-foxglove-bridge \
-  && apt-get autoremove -y \
-  && apt-get clean -y \
-  && rm -rf /var/lib/apt/lists/*
-ENV DEBIAN_FRONTEND=dialog
-WORKDIR /workspace
-
-#CMD ["ros2", "launch", "glados_bringup", "glados_onrobot.launch.py"]
-#ENTRYPOINT ["entrypoint.sh"]
-#CMD ["/bin/bash", "-c"]
-# CMD ["ros2", "launch", "glados_bringup", "glados_onrobot.launch.py"]
-# ENTRYPOINT ["/bin/bash", "-c", "source install/setup.bash && ros2 launch glados_bringup glados_onrobot.launch.py"]
-ENTRYPOINT ["/bin/bash", "-c", "source install/setup.bash && ros2 launch glados_bringup glados_onrobot.fox.launch.py"]
-# ENTRYPOINT ["/bin/bash", "-c", "source install/setup.bash && bash"]
-
-
-
-
-
-
+# RUN rosdep install -i --from-path src --rosdistro $ROS_DISTRO --skip-keys=librealsense2 -y

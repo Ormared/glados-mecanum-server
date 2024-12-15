@@ -11,8 +11,8 @@ class SerialNode : public rclcpp::Node
 public:
     SerialNode() : Node("serial_node")
     {
-        this->declare_parameter<std::string>("port_name", "/dev/ttyUSB0");
-        this->declare_parameter<int>("baud_rate", 38400);
+        this->declare_parameter<std::string>("port_name", "/dev/ttyS1");
+        this->declare_parameter<int>("baud_rate", 57600);
         this->get_parameter("port_name", port_name_);
         this->get_parameter("baud_rate", baud_rate_);
 

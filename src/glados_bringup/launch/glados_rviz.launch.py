@@ -13,15 +13,15 @@ def generate_launch_description():
     with open(sdf_file, 'r') as infp:
         robot_desc = infp.read()
 
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        output='both',
-        parameters=[
-            {'robot_description': robot_desc},
-        ]
-    )
+    # robot_state_publisher = Node(
+    #     package='robot_state_publisher',
+    #     executable='robot_state_publisher',
+    #     name='robot_state_publisher',
+    #     output='both',
+    #     parameters=[
+    #         {'robot_description': robot_desc},
+    #     ]
+    # )
     # Visualize in RViz
     rviz = Node(
        package='rviz2',
@@ -33,6 +33,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        robot_state_publisher,
+        # robot_state_publisher,
         rviz
     ])
