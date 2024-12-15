@@ -84,26 +84,26 @@ endif()
   DESTINATION lib/${PROJECT_NAME})
 
 # Depth camera node
-  add_executable(depth_camera_node src/depth_camera_node.cpp)
+  # add_executable(depth_camera_node src/depth_camera_node.cpp)
 
   # Link libraries
-  ament_target_dependencies(depth_camera_node
-    rclcpp
-    sensor_msgs
-    cv_bridge
-    # OpenCV
-    librealsense2
-  )
+  # ament_target_dependencies(depth_camera_node
+  #   rclcpp
+  #   sensor_msgs
+  #   # cv_bridge
+  #   # OpenCV
+  #   # librealsense2
+  # )
 
   # target_link_libraries(depth_camera_node
   #   realsense2
   # )
 
   # Install
-  install(TARGETS
-    depth_camera_node
-    DESTINATION lib/${PROJECT_NAME}
-  )
+  # install(TARGETS
+  #   depth_camera_node
+  #   DESTINATION lib/${PROJECT_NAME}
+  # )
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
