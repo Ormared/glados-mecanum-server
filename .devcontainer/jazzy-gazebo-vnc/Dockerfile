@@ -1,4 +1,3 @@
-
 FROM althack/ros2:jazzy-gazebo
 
 # Add user to video group to allow access to webcam
@@ -8,6 +7,10 @@ RUN apt-get update \
    && apt-get -y install --no-install-recommends \
    libxkbcommon-x11-0 \
    libxcb-xinerama0 \
+   libxcb-xkb1 \
+   libxcb-render-util0 \
+   libx11-xcb1 \
+   xvfb \
    libxcb-xinput0 \
    x11-apps \
    iputils-ping \
@@ -16,6 +19,7 @@ RUN apt-get update \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
+
 
 RUN apt-get update \
    && apt-get -y install --no-install-recommends \
@@ -32,11 +36,50 @@ RUN apt-get update \
 
 RUN apt-get -y install --no-install-recommends \
    libopencv-dev \
-   python3-opencv \
+   python3-opencv 
+
+RUN apt-get install -y \
+   unzip \
+   wget \ 
+   curl \
+   apt-transport-https \
+   gnupg \
+   lsb-release \
+   # packages for realsense
+   libglfw3-dev \
+   libssl-dev \
+   libusb-1.0-0-dev \
+   libudev-dev \
+   pkg-config \
+   libgtk-3-dev \
+   cmake \
+   build-essential \
+   libglfw3-dev \
+   libgl1-mesa-dev \
+   libglu1-mesa-dev \
+   at \
+   rsync \
+   v4l-utils \
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
+
+# COPY ../../librealsense2_noble_x86_debians_beta.zip /tmp
+RUN wget https://github.com/IntelRealSense/librealsense/releases/download/v2.56.3/librealsense2_noble_x86_debians_beta.zip -P /tmp
+# COPY ../../pyrealsense2-2.56.3.7838-cp310-cp310-manylinux1_x86_64_beta.whl /tmp
+RUN wget https://github.com/IntelRealSense/librealsense/releases/download/v2.56.3/pyrealsense2-2.56.3.7838-cp310-cp310-manylinux1_x86_64_beta.whl -P /tmp
+
+# Install the library
+RUN unzip /tmp/librealsense2_noble_x86_debians_beta.zip -d /tmp/librealsense
+RUN dpkg -i /tmp/librealsense/*.deb
+RUN apt --fix-broken install -y
+
+
+# WHEELS FOR USING REALSENSE WITH PYTHON
+# RUN pip install /tmp/pyrealsense2-2.56.3.7838-cp310-cp310-manylinux1_x86_64_beta.whl \
+   # && rm -rf /tmp/*
+
 
 # RUN git clone https://github.com/Slamtec/rplidar_sdk \
 #       && cd rplidar_sdk \
