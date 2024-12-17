@@ -18,9 +18,8 @@ def generate_launch_description():
 
     pkg_project_description = get_package_share_directory('glados_description')
     pkg_project_hardware = get_package_share_directory('glados_hardware')
-
-    sdf_file = os.path.join(pkg_project_description, 'models', 'glados', 'model.sdf')
-    with open(sdf_file, 'r') as infp:
+    urdf_file = os.path.join(pkg_project_description, 'models', 'glados', 'model.urdf')
+    with open(urdf_file, 'r') as infp:
         robot_desc = infp.read()
 
     serial_params = os.path.join(pkg_project_hardware, 'config', 'params.yaml')

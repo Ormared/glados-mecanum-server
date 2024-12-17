@@ -285,7 +285,7 @@ private:
         transform.transform.translation.z = 0.0;
         transform.transform.rotation = odom_msg.pose.pose.orientation;
 
-        // tf_broadcaster_->sendTransform(transform);
+        tf_broadcaster_->sendTransform(transform);
     }
 
     // STM constants

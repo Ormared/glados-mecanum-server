@@ -157,4 +157,29 @@
     <origin xyz="0.330 0 -0.0125" rpy="0 0 0"/>
   </joint>
 
+  <!-- Box on Top of Chassis -->
+  <link name="top_box">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.245 0.18"/>
+      </geometry>
+      <material name="top_box_material">
+        <color rgba="0.7 0.7 0.7 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.245 0.18"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="chassis_to_top_box" type="fixed">
+    <parent link="chassis"/>
+    <child link="top_box"/>
+    <origin xyz="-0.12 0 0.025" rpy="0 0 0"/>
+  </joint>
+
 </robot>

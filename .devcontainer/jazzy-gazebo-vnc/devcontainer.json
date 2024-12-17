@@ -19,10 +19,12 @@
 		"--volume=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history:/root/.bash_history",
 		// "--env=DISPLAY=${localEnv:DISPLAY}",
 		// "--volume=/mnt/wslg:/mnt/wslg",
-		// "--gpus=all",
+		"--gpus=all",
 		"--shm-size=2g",
-		// uncomment to use intel iGPU
 		"--volume=/dev/dri:/dev/dri",
+		"--volume=/dev:/dev",
+		// uncomment to use intel iGPU
+		// "--volume=/dev/dri:/dev/dri",
 		// "--device=/dev/dri/card0:/dev/dri/card0",
   		// "--device=/dev/dri/card1:/dev/dri/card1",
   		// "--device=/dev/dri/renderD128:/dev/dri/renderD128",

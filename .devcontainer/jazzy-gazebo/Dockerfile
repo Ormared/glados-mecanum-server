@@ -37,18 +37,51 @@ RUN apt-get update \
 RUN apt-get -y install --no-install-recommends \
    libopencv-dev \
    python3-opencv \
-   ros-jazzy-teleop-twist-keyboard \
+   ros-jazzy-teleop-twist-keyboard 
 
+RUN apt-get install -y \
+   unzip \
+   wget \ 
+   curl \
+   apt-transport-https \
+   gnupg \
+   lsb-release \
+   # packages for realsense
+   libglfw3-dev \
+   libssl-dev \
+   libusb-1.0-0-dev \
+   libudev-dev \
+   pkg-config \
+   libgtk-3-dev \
+   cmake \
+   build-essential \
+   libglfw3-dev \
+   libgl1-mesa-dev \
+   libglu1-mesa-dev \
+   at \
+   rsync \
+   v4l-utils \
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
 
-# RUN git clone https://github.com/Slamtec/rplidar_sdk \
-#       && cd rplidar_sdk \
-#       && make
+# COPY ../../librealsense2_noble_x86_debians_beta.zip /tmp
+RUN wget https://github.com/IntelRealSense/librealsense/releases/download/v2.56.3/librealsense2_noble_x86_debians_beta.zip -P /tmp
+# COPY ../../pyrealsense2-2.56.3.7838-cp310-cp310-manylinux1_x86_64_beta.whl /tmp
+RUN wget https://github.com/IntelRealSense/librealsense/releases/download/v2.56.3/pyrealsense2-2.56.3.7838-cp310-cp310-manylinux1_x86_64_beta.whl -P /tmp
 
-# RUN mkdir -p /var/run/user && chmod 755 /var/run/user
+# Install the library
+RUN unzip /tmp/librealsense2_noble_x86_debians_beta.zip -d /tmp/librealsense
+RUN dpkg -i /tmp/librealsense/*.deb
+RUN apt --fix-broken install -y
+
+
+# WHEELS FOR USING REALSENSE WITH PYTHON
+# RUN pip install /tmp/pyrealsense2-2.56.3.7838-cp310-cp310-manylinux1_x86_64_beta.whl \
+   # && rm -rf /tmp/*
+
+
 RUN sudo chown ros:ros /var/run/user
 
 ENV GZ_VERSION=harmonic
