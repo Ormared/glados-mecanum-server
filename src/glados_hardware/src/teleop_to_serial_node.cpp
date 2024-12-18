@@ -184,6 +184,7 @@ private:
         // Create the Int8Array message and publish it
         auto serial_msg = glados_hardware::msg::Int8Array();
         serial_msg.data = serial_data;
+        // while(true)
         serial_publisher_->publish(serial_msg);
     }
 
