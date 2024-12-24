@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <vector>
+#include <mutex>
 
 class SerialNode : public rclcpp::Node
 {
@@ -23,12 +24,18 @@ public:
         }
 
         subscription_ = this->create_subscription<glados_hardware::msg::Int8Array>(
-            "serial_write", 10, std::bind(&SerialNode::write_to_serial, this, std::placeholders::_1));
+            "serial_write", 10, std::bind(&SerialNode::on_message_received, this, std::placeholders::_1));
 
         publisher_ = this->create_publisher<glados_hardware::msg::Int8Array>("serial_read", 10);
 
         timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(30), std::bind(&SerialNode::read_from_serial, this));
+            std::chrono::milliseconds(50), std::bind(&SerialNode::write_read_to_serial, this));
+
+        // write_timer_ = this->create_wall_timer(
+        //     std::chrono::milliseconds(10), std::bind(&SerialNode::write_to_serial, this));
+
+        // read_timer_ = this->create_wall_timer(
+        //     std::chrono::milliseconds(30), std::bind(&SerialNode::read_from_serial, this));
     }
 
     ~SerialNode()
@@ -71,22 +78,66 @@ private:
 
         return fd;
     }
+    
+    void on_message_received(const glados_hardware::msg::Int8Array::SharedPtr msg)
+    {
+        // std::lock_guard<std::mutex> lock(write_mutex_);
+        // if (current_message_.data != msg->data) {
+        current_message_ = *msg; // Copy the new message
+        has_new_message_ = true;
+        // }
+    }
 
-    void write_to_serial(const glados_hardware::msg::Int8Array::SharedPtr msg)
+    
+    void write_read_to_serial(){
+        // write_to_serial();
+        // read_from_serial();
+
+        if (serial_port_ < 0) {
+            RCLCPP_ERROR(this->get_logger(), "Error writing to serial port");
+            return;
+        }
+
+        if (current_message_.data.empty()) return; // Nothing to write
+        
+        if(has_new_message_ == false && current_message_.data.size() != 0){
+            ssize_t bytes_written = write(serial_port_, current_message_.data.data(), current_message_.data.size());
+            if (bytes_written < 0) {
+                RCLCPP_ERROR(this->get_logger(), "Error writing to serial port");
+            }
+        }
+        has_new_message_ = false;
+
+        uint8_t buffer[39]; // uint8_t buffer to match the custom message
+        ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
+        if (bytes_read == 39) {
+            auto message = glados_hardware::msg::Int8Array();
+            message.data = std::vector<uint8_t>(buffer, buffer + bytes_read);
+            publisher_->publish(message);
+        }
+        // return;
+    }
+
+    void write_to_serial()
     {
         if (serial_port_ < 0) return;
 
-        ssize_t bytes_written = write(serial_port_, msg->data.data(), msg->data.size());
-        if (bytes_written < 0) {
-            RCLCPP_ERROR(this->get_logger(), "Error writing to serial port");
+        // std::lock_guard<std::mutex> lock(write_mutex_);
+        if (current_message_.data.empty()) return; // Nothing to write
+        
+        if(has_new_message_ == false && current_message_.data.size() != 0){
+            ssize_t bytes_written = write(serial_port_, current_message_.data.data(), current_message_.data.size());
+            if (bytes_written < 0) {
+                RCLCPP_ERROR(this->get_logger(), "Error writing to serial port");
+            }
         }
+        has_new_message_ = false;
     }
 
     void read_from_serial() {
         if (serial_port_ < 0) return;
 
         uint8_t buffer[39]; // uint8_t buffer to match the custom message
-        // uint8_t buffer[256]; // uint8_t buffer to match the custom message
         ssize_t bytes_read = read(serial_port_, buffer, sizeof(buffer));
         if (bytes_read == 39) {
             auto message = glados_hardware::msg::Int8Array();
@@ -103,6 +154,12 @@ private:
     rclcpp::Subscription<glados_hardware::msg::Int8Array>::SharedPtr subscription_;
     rclcpp::Publisher<glados_hardware::msg::Int8Array>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::TimerBase::SharedPtr read_timer_;
+    rclcpp::TimerBase::SharedPtr write_timer_;
+
+    glados_hardware::msg::Int8Array current_message_;
+    std::mutex write_mutex_;
+    bool has_new_message_ = true;
 };
 
 int main(int argc, char *argv[])

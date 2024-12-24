@@ -51,8 +51,8 @@
   <joint name="front_left_wheel_joint" type="revolute">
     <parent link="chassis"/>
     <child link="front_left_wheel"/>
-    <origin xyz="0.2 0.1625 0" rpy="-1.5707 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="0.2 0.1635 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
     <limit lower="-1.79769e+308" upper="1.79769e+308" effort="0" velocity="0"/>
   </joint>
 
@@ -72,8 +72,8 @@
   <joint name="front_right_wheel_joint" type="revolute">
     <parent link="chassis"/>
     <child link="front_right_wheel"/>
-    <origin xyz="0.2 -0.1625 0" rpy="-1.5707 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="0.2 -0.1635 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
     <limit lower="-1.79769e+308" upper="1.79769e+308" effort="0" velocity="0"/>
   </joint>
 
@@ -93,8 +93,8 @@
   <joint name="rear_left_wheel_joint" type="revolute">
     <parent link="chassis"/>
     <child link="rear_left_wheel"/>
-    <origin xyz="-0.2 0.1625 0" rpy="-1.5707 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="-0.2 0.1635 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
     <limit lower="-1.79769e+308" upper="1.79769e+308" effort="0" velocity="0"/>
   </joint>
 
@@ -114,8 +114,8 @@
   <joint name="rear_right_wheel_joint" type="revolute">
     <parent link="chassis"/>
     <child link="rear_right_wheel"/>
-    <origin xyz="-0.2 -0.1625 0" rpy="-1.5707 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="-0.2 -0.1635 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
     <limit lower="-1.79769e+308" upper="1.79769e+308" effort="0" velocity="0"/>
   </joint>
 
@@ -126,8 +126,8 @@
       <geometry>
         <cylinder radius="0.04" length="0.04"/>
       </geometry>
-      <material name="lidar_material">
-        <color rgba="1 0 0 1"/>
+      <material name="chassis_material">
+        <color rgba="0.5 0.5 0.5 1"/>
       </material>
     </visual>
   </link>
@@ -135,7 +135,7 @@
   <joint name="lidar_joint" type="fixed">
     <parent link="chassis"/>
     <child link="lidar_link"/>
-    <origin xyz="0.325 0 0.045" rpy="0 0 0"/>
+    <origin xyz="0.245 0 0.23" rpy="0 0 0"/>
   </joint>
 
   <!-- Camera Sensor -->
@@ -154,11 +154,10 @@
   <joint name="chassis_to_camera" type="fixed">
     <parent link="chassis"/>
     <child link="camera_link"/>
-    <origin xyz="0.330 0 -0.0125" rpy="0 0 0"/>
+    <origin xyz="0.305 0 0.195" rpy="0 0 0"/>
   </joint>
 
-  <!-- Box on Top of Chassis -->
-  <link name="top_box">
+  <link name="battery">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -176,10 +175,82 @@
     </collision>
   </link>
 
-  <joint name="chassis_to_top_box" type="fixed">
+  <joint name="chassis_to_battery" type="fixed">
     <parent link="chassis"/>
-    <child link="top_box"/>
-    <origin xyz="-0.12 0 0.025" rpy="0 0 0"/>
+    <child link="battery"/>
+    <origin xyz="-0.12 0 0.115" rpy="0 0 0"/>
+  </joint>
+
+  <link name="front_left_pillar">
+    <visual>
+      <origin xyz="0.09 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.01 0.01"/>
+      </geometry>
+      <material name="chassis_material">
+        <color rgba="0.5 0.5 0.5 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.09 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.01 0.01"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_left_pillar_to_chassis" type="fixed">
+    <parent link="chassis"/>
+    <child link="front_left_pillar"/>
+    <origin xyz="0.32 0.1175 0.025" rpy="0 -1.57 0"/>
+  </joint>
+
+  <link name="front_right_pillar">
+    <visual>
+      <origin xyz="0.09 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.01 0.01"/>
+      </geometry>
+      <material name="chassis_material">
+        <color rgba="0.5 0.5 0.5 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.09 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.01 0.01"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="front_right_pillar_to_chassis" type="fixed">
+    <parent link="chassis"/>
+    <child link="front_right_pillar"/>
+    <origin xyz="0.32 -0.1175 0.025" rpy="0 -1.57 0"/>
+  </joint>
+
+  <link name="roof">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.535 0.245 0.01"/>
+      </geometry>
+      <material name="chassis_material">
+        <color rgba="0.5 0.5 0.5 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.535 0.245 0.01"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="roof_to_chassis" type="fixed">
+    <parent link="chassis"/>
+    <child link="roof"/>
+    <origin xyz="0.0575 0 0.21" rpy="0 0 0"/>
   </joint>
 
 </robot>

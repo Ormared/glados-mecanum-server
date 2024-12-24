@@ -24,11 +24,11 @@
 		"--security-opt=seccomp:unconfined",
 		// "--security-opt=apparmor:unconfined",
 		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
-		"--volume=${localEnv:XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority",
+		// "--volume=${localEnv:XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority",
 		"--volume=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history:/root/.bash_history",
 		// "--env=DISPLAY=${localEnv:DISPLAY}",
 		// "--volume=/mnt/wslg:/mnt/wslg",
-		"--gpus=all",
+		// "--gpus=all",
 		// uncomment to use intel iGPU
 		"--volume=/dev/dri:/dev/dri",
 		// "--volume=/dev/ttyUSB0:/dev/ttyUSB0",

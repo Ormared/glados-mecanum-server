@@ -56,10 +56,16 @@
             "command": "ros2 launch glados_bringup glados_gazebo.launch.py world:=depot"
         },
         {
+            "label": "lidar",
+            "detail": "Launch s2 lidar launch file",
+            "type": "shell",
+            "command": "ros2 launch sllidar_ros2 sllidar_s2_launch.py frame_id:=lidar_link"
+        },
+        {
             "label": "slam_toolbox",
             "detail": "Launch slam_toolbox with slam_params_file",
             "type": "shell",
-            "command": "ros2 launch slam_toolbox online_async_launch.py slam_params_file:=./src/glados_bringup/config/mapper_params_online_async.yaml "
+            "command": "ros2 launch slam_toolbox online_async_launch.py slam_params_file:=/workspaces/glados-mecanum-server_AO/src/glados_bringup/config/mapper_params_online_async.yaml"
         },
         {
             "label": "slam_toolbox_gz",

@@ -60,11 +60,16 @@ RUN apt-get install -y \
    libglu1-mesa-dev \
    at \
    rsync \
-   v4l-utils \
+   v4l-utils 
+   
+RUN apt-get install --no-install-recommends -y \
+   ros-jazzy-tf-transformations \
    && apt-get autoremove -y \
    && apt-get clean -y \
    && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
+
+# RUN pip3 install tf-transformations
 
 # COPY ../../librealsense2_noble_x86_debians_beta.zip /tmp
 RUN wget https://github.com/IntelRealSense/librealsense/releases/download/v2.56.3/librealsense2_noble_x86_debians_beta.zip -P /tmp
