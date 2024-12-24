@@ -2,7 +2,7 @@ twist_mux:
   ros__parameters:
     topics:
       navigation:
-        topic: /move_base/cmd_vel
+        topic: /move_base/cmd_vel_nav
         timeout: 0.5
         priority: 10
       teleop:

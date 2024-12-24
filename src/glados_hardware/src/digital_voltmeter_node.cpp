@@ -12,7 +12,7 @@
 
 class BatteryStatePublisher : public rclcpp::Node {
 public:
-    explicit BatteryStatePublisher(const std::string& serial_port = "/dev/ttyUSB0");
+    explicit BatteryStatePublisher(const std::string& serial_port = "/dev/ttyUSB1");
     ~BatteryStatePublisher();
 
 private:
@@ -39,13 +39,14 @@ BatteryStatePublisher::BatteryStatePublisher(const std::string& serial_port)
         "battery_state", 10);
 
     // Setup serial connection
-    if (setup_serial()) {
+    // if (setup_serial()) {
+    if (true) {
         RCLCPP_INFO(this->get_logger(), "Serial connection established on %s", 
             serial_port_.c_str());
         
         // Create timer for reading and publishing data (10Hz)
         timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100),
+            std::chrono::milliseconds(500),
             std::bind(&BatteryStatePublisher::timer_callback, this));
     } else {
         RCLCPP_ERROR(this->get_logger(), "Failed to establish serial connection");
@@ -114,40 +115,51 @@ float BatteryStatePublisher::read_voltage() {
 }
 
 void BatteryStatePublisher::timer_callback() {
-    if (!is_serial_connected_) {
-        return;
-    }
+    // if (!is_serial_connected_) {
+    //     return;
+    // }
+    float max_voltage = 14.3;
 
-    float voltage = read_voltage();
-    if (voltage >= 0.0f) {  // Valid reading
+    float voltage = 5.4;         // Voltage in Volts (Mandatory)
+    float temperature = NAN;      // Temperature in Degrees Celsius (If unmeasured NaN)
+    float current = NAN;          // Negative when discharging (A)  (If unmeasured NaN)
+    float design_capacity = 60;  // Capacity in Ah (design capacity)  (If unmeasured NaN)
+    float capacity = 58;         // Capacity in Ah (last full capacity)  (If unmeasured NaN)
+    float charge = (voltage / max_voltage) * capacity;           // Current charge in Ah  (If unmeasured NaN)
+    float percentage = charge / design_capacity;       // Charge percentage on 0 to 1 range  (If unmeasured NaN)
+    bool present = true;          // True if the battery is present
+    
+    // float voltage = read_voltage();
+    // if (voltage >= 0.0f) {  // Valid reading
+    if (true) {
         auto battery_msg = sensor_msgs::msg::BatteryState();
         
         // Mandatory fields
         battery_msg.voltage = voltage;
         
         // Optional fields set to NaN
-        battery_msg.current = NAN;
-        battery_msg.temperature = NAN;
+        battery_msg.current = current;
+        battery_msg.temperature = temperature;
         
         // Capacity-related fields
-        battery_msg.charge = NAN;
-        battery_msg.capacity = NAN;
-        battery_msg.design_capacity = NAN;
-        battery_msg.percentage = NAN;
+        battery_msg.charge = charge;
+        battery_msg.capacity = capacity;
+        battery_msg.design_capacity = design_capacity;
+        battery_msg.percentage = percentage;
         
         // Status and health fields
-        battery_msg.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_UNKNOWN;
+        battery_msg.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING;
         battery_msg.power_supply_health = sensor_msgs::msg::BatteryState::POWER_SUPPLY_HEALTH_UNKNOWN;
         battery_msg.power_supply_technology = sensor_msgs::msg::BatteryState::POWER_SUPPLY_TECHNOLOGY_UNKNOWN;
         
         // Additional fields
-        battery_msg.present = true;
+        battery_msg.present = present;
         
         // Publish the message
         publisher_->publish(battery_msg);
         
-        RCLCPP_DEBUG(this->get_logger(), 
-            "Published Battery State: V=%.2f", voltage);
+        // RCLCPP_DEBUG(this->get_logger(), 
+        //     "Published Battery State: V=%.2f", voltage);
     }
 }
 

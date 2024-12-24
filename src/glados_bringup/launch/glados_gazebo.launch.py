@@ -46,7 +46,7 @@ def generate_launch_description():
     pkg_project_gazebo = get_package_share_directory('glados_gazebo')
     pkg_project_description = get_package_share_directory('glados_description')
     pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
-    ekf_config_path = PathJoinSubstitution([pkg_project_bringup, 'config', 'ekf.yaml'])
+    ekf_config_path = PathJoinSubstitution([pkg_project_bringup, 'config', 'ekf_gz.yaml'])
 
     # Load the SDF file from "description" package
     sdf_file  =  os.path.join(pkg_project_description, 'models', 'glados', 'model.sdf')
